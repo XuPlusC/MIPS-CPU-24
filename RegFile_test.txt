@@ -1,0 +1,27 @@
+`timescale 1ns / 1ps
+
+module RegFile_test();
+    reg [4:0]R1_in;
+    reg [4:0]R2_in;
+    reg [4:0]W_in;
+    reg [31:0]Din;
+    reg WE, clk;
+    wire [31:0]R1_out;
+    wire [31:0]R2_out;
+    
+    RegFile test(.R1_in(R1_in), .R2_in(R2_in), .W_in(W_in), .Din(Din), .WE(WE), .clk(clk),
+                .R1_out(R1_out), .R2_out(R2_out));
+    integer i;
+    initial begin
+        R1_in = 0; R2_in = 0; W_in = 0;  Din = 1;   WE = 0; clk = 0;
+        for(i=1; i<10; i=i+1)
+        begin
+            #20;    W_in = i;   Din = 2*Din;    WE = 1;
+            #20;    R1_in = i;  R2_in = i;  WE = 0;
+        end
+        #20;
+        $stop;
+    end
+    
+    always #5 clk = ~clk;
+endmodule
