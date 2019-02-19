@@ -9,7 +9,6 @@
 //  10  visit by word
 //  11  (reserved) visit by double-word (64-bit)
 
-
 `timescale 1ns / 1ps
 
 module ROM(Addr, Data_input, Mode, str, sel, clk, clr, ld, Data_output);
@@ -25,16 +24,16 @@ module ROM(Addr, Data_input, Mode, str, sel, clk, clr, ld, Data_output);
     input [1:0] Mode;
     input str, sel, clk, clr, ld;
     output reg [31:0] Data_output;
-    generate genvar i;
+    integer i;
 
-    reg [31:0] mem [2**ADDR_WIDTH-1:0];
+    reg [31:0] mem [2**(ADDR_WIDTH-2)-1:0];
     // reg [31:0]select_word;
 
     initial begin
-        $readmemb("rom_data.dat",mem);
+        $readmemb("D:/rom_data.dat",mem);
     end
     
-    always @(clr) begin
+    always @(posedge clr) begin
         for(i = 0; i <= 99; i = i+1) begin
             mem[i] = 32'h0000;
         end 
