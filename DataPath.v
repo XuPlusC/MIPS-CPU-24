@@ -39,7 +39,7 @@ module shamt_input(Order, R1_out, shift, Lui, shamt);
     end
 endmodule
 
-module Extern(Order, Signext, imm, ext18);
+module Extern(Order, Signedext, imm, ext18);
     input [31:0]Order;
     input Signext;
     output [31:0]imm, ext18;
