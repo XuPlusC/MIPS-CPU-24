@@ -1,11 +1,13 @@
-`timescale 1ns / 1ps
+﻿`timescale 1ns / 1ps
 
-module RegFile(R1_in, R2_in, W_in, Din, WE, clk, R1_out, R2_out);
+module RegFile(R1_in, R2_in, W1_in, W2_in, Din1, Din2, WE, clk, R1_out, R2_out);
     parameter WIDTH=32;     //默认位宽为32
     input [4:0] R1_in;      //需要读取的寄存器A编号
     input [4:0] R2_in;      //需要读取的寄存器B编号
-    input [4:0] W_in;       //需要写入的寄存器编号
-    input [WIDTH-1:0] Din;  //需要写入的值
+    input [4:0] W1_in;       //需要写入的寄存器编号
+    input [4:0] W2_in;      //乘除指令时需同时写入两个寄存器
+    input [WIDTH-1:0] Din1;  //需要写入的值
+    input [WIDTH-1:0] Din2;   //乘除指令时需写入的第二个寄存器的值
     input WE,clk;   //使能端和时钟信号
     output [WIDTH-1:0] R1_out;  //寄存器A的值
     output [WIDTH-1:0] R2_out;  //寄存器B的值
@@ -17,7 +19,7 @@ module RegFile(R1_in, R2_in, W_in, Din, WE, clk, R1_out, R2_out);
     end
 
     always @(posedge clk) begin
-        if(WE)  Reg[W_in] = Din;
+        if(WE)  begin   Reg[W1_in] = Din1;   Reg[W2_in] = Din2; end
     end
 
     assign R1_out = Reg[R1_in];
