@@ -24,16 +24,18 @@ module ROM(Addr, Data_input, Mode, str, sel, clk, clr, ld, Data_output);
     input [31:0] Data_input;
     input [1:0] Mode;
     input str, sel, clk, clr, ld;
-    output reg [31:0] Data_output;
+    output wire [31:0] Data_output;
     
     reg [2**(ADDR_WIDTH-2)-1:0] i;
     reg [31:0] mem [2**(ADDR_WIDTH-2)-1:0];
-    wire [ADDR_WIDTH-3:0]index;  // have to use this to avoid Synth 8-2898
-    
+    reg [31:0] select_word;
+
+    wire [ADDR_WIDTH-1:0]index;
+
     assign index = Addr[ADDR_WIDTH-1:2];
 
     initial begin
-        $readmemh("D:/rom_data.dat",mem);
+        $readmemh("D:/data_rom.dat",mem);
     end
 
     always @(posedge clk or posedge clr)
@@ -45,86 +47,62 @@ module ROM(Addr, Data_input, Mode, str, sel, clk, clr, ld, Data_output);
         end
         else begin
             if(sel) begin
-                // select_word = mem[Addr[ADDR_WIDTH-1:2]];
-
-                case(Mode)
-                    Mode_byte: begin
-                        if (ld) begin   // load byte
-                            Data_output[31:8] = 24'h000;
+                select_word = mem[index];
+                if(str) begin
+                    case(Mode)
+                        Mode_byte: begin
                             case(Addr[1:0])
-                                2'b00: begin Data_output[7:0] = mem[index] [7:0];   end
-                                2'b01: begin Data_output[7:0] = mem[index] [15:8];  end
-                                2'b10: begin Data_output[7:0] = mem[index] [23:16]; end
-                                2'b11: begin Data_output[7:0] = mem[index] [31:24]; end
-                                default: begin Data_output[7:0] = mem[index] [7:0]; end // TODO
-                            endcase
-
-                        end
-                        else begin
-                            if (str) begin  // store byte
-                                case(Addr[1:0])
                                     2'b00: begin mem[index] [7:0] = Data_input[7:0];     end
                                     2'b01: begin mem[index] [15:8] = Data_input[7:0];    end
                                     2'b10: begin mem[index] [23:16] = Data_input[7:0];   end
                                     2'b11: begin mem[index] [31:24] = Data_input[7:0];   end
                                     default: begin mem[index] [7:0] = Data_input[7:0];   end // TODO
-                                endcase
-                            end
-                            else begin
-                                // do nothing
-                            end
-                        end   
-                    end
-
-                    Mode_halfword: begin
-                        if(ld) begin // load halfword
-                            Data_output[31:16] = 16'h00;
-                            if(Addr[1:1]) begin // higher part of the word
-                                Data_output[15:0] = mem[index] [31:16];
-                            end
-                            else begin          // lower part of the word
-                                Data_output[15:0] = mem[index] [15:0];
-                            end
+                            endcase
                         end
-                        else begin
-                            if(str) begin   // store halfword
-                                if(Addr[1:1]) begin
+                        Mode_halfword: begin
+                            if(Addr[1:1]) begin
                                     mem[index] [31:16] = Data_input[15:0];
                                 end
                                 else begin
                                     mem[index] [15:0] = Data_input[15:0];
-                                end
-                            end
-                            else begin
-                                // do nothing
                             end
                         end
-                    end
-
-                    Mode_word: begin
-                        if (ld) begin
-                            Data_output[31:0] = mem[index];
+                        Mode_word: begin
+                            mem[index] = Data_input;
                         end
-                        else begin
-                            if (str) begin
-                                mem[index] = Data_input;
-                            end
-                        end                    
-                    end
-
-                    // Mode_doubleword: begin
-                        
-                    // end
-
-                    default: begin
-                        // do nothing? TODO
-                    end
-                endcase
-                
+                        default: begin
+                            // do nothing
+                        end
+                    endcase
+                end
+                else begin
+                    // do nothing
+                end
             end
             else begin
-                // not selected. donothing
+                select_word = 32'h00000000;
             end
         end
     end
+
+    wire [7:0] mux_out_7_0, mux_out_15_8, mux_out_23_16, mux_out_31_24; 
+    // wire [7:0] mux_in_7_0_0, mux_in_7_0_1, mux_in_7_0_2, mux_in_7_0_3;
+    wire [7:0] mux_in_15_8_0, mux_in_15_8_1, mux_in_15_8_2, mux_in_15_8_3;
+    // wire [7:0] mux_in_23_16_0, mux_in_23_16_1, mux_in_23_16_2, mux_in_23_16_3;
+    // wire [7:0] mux_in_31_24_0, mux_in_31_24_1, mux_in_31_24_2, mux_in_31_24_3;
+    assign mux_out_7_0 = ((Mode == Mode_halfword) && (Addr[1] == 1))?(select_word[23:16]):(select_word[7:0]);
+    // assign mux_out_15_8 = (Mode == Mode_byte)? 8'b0 : (
+    //                             (Addr[1] == 1)? select_word[31:24]:
+    //                             select_word[15:8]
+    //                         );
+
+    assign mux_in_15_8_0 = 8'b0;
+    assign mux_in_15_8_1 = (Addr[1] == 1)?(select_word[31:24]):(select_word[15:8]);
+    assign mux_in_15_8_2 = select_word[15:8];
+
+    Mux_2 inst_mux2(mux_in_15_8_0, mux_in_15_8_1, mux_in_15_8_2, 8'b0, Mode, mux_out_15_8);
+
+    assign mux_out_23_16 = (Mode == Mode_word)?select_word[23:16]:8'b0;
+    assign mux_out_31_24 = (Mode == Mode_word)?select_word[31:24]:8'b0;
+    assign Data_output = {mux_out_31_24, mux_out_23_16, mux_out_15_8, mux_out_7_0};
 endmodule
