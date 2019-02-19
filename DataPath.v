@@ -49,10 +49,10 @@ module Extern(Order, Signext, imm, ext18);
     assign ext18 = {temp, Order[15:0]}<<2;
 endmodule
 
-module Data_to_Din(mem, Result1, PC, Jal, Memtoreg, Din);
+module Data_to_Din(mem, Result1, PC_plus_4, Jal, Memtoreg, Din);
     input [31:0] mem, Result1, PC;
     input Jal, Memtoreg;
     output [31:0] Din;
-    assign Din = (Memtoreg == 1)?mem:((Jal == 1)?(PC + 4 ):Result1);
+    assign Din = (Memtoreg == 1)?mem:((Jal == 1)?PC_plus_4:Result1);
 
 endmodule
