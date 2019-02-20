@@ -19,19 +19,23 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-
-module top_of_all(clr,Go,clk,choose_data_show,choose_Hz,SEG,AN);
+module top_of_all(clr,Go,clk,choose_data_show,choose_Hz,clk_N,SEG,AN);
 	input clr,Go;
 	input clk;
 	input [2:0] choose_data_show;
 	//与开关绑定，此输入决定Led显示来源
 	input [1:0] choose_Hz;
-	//与开关绑定，此输入决定MIPS CPU 的频率
+	//与开关绑定，此输入决定MIPS CPU 的频率?
+	output wire clk_N;
 	output [7:0] SEG,AN;
 	
 	wire [31:0] Leddata,Count_all,Count_branch,Count_jmp;
-	wire [31:0] Leddata_show;
-	wire clk_N;
+	reg [31:0] Leddata_show;
+
+	initial begin
+		Leddata_show = 32'h0000_0000;
+	end
+
 	always @(choose_data_show) begin
 		case(choose_data_show)
 			0:Leddata_show = Leddata;
@@ -44,9 +48,9 @@ module top_of_all(clr,Go,clk,choose_data_show,choose_Hz,SEG,AN);
 	end
 	
 	show show(clk,Leddata_show,SEG,AN);	
-	MIPS_CPU MIPS_CPU(clr,Go,clk_N,Leddata,Count_all,Count_branch,Count_jmp);
-	divider_dif divider_dif(clk,choose_Hz,clk_N)
-	
+	MIPS_CPU_false MIPS_CPU_false(clr,Go,clk_N,Leddata,Count_all,Count_branch,Count_jmp);
+	divider_dif divider_dif(clk,choose_Hz,clk_N);
+
 endmodule
 
 module divider_dif(clk, choose_Hz,clk_N);
@@ -54,14 +58,14 @@ module divider_dif(clk, choose_Hz,clk_N);
 	input clk;                      // 系统时钟
 	input [1:0] choose_Hz;
 	//选择频率
-	//00:1000Hz,01:100Hz,10:10Hz,01:1Hz
-	output clk_N;                   // 分频后的时钟
+	//00:1000Hz,01:100Hz,10:10Hz,11:1Hz
+	output reg clk_N;                   // 分频后的时钟
 	reg [31:0] N;
-	reg [13:0] counter;             /* 计数器变量，通过计数实现分频。
+	reg [21:0] counter;             /* 计数器变量，通过计数实现分频。
 									   当计数器从0计数到(N/2-1)时，
-									   输出时钟翻转，计数器清零 */
-	reg clk_N;						//在always语句中对clk_N赋值，声明为reg 
+									   输出时钟翻转，计数器清零 */ 
 	initial begin
+		clk_N = 0;
 		counter = 0;
 		N = 10_000;
 	end
