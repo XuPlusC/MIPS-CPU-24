@@ -75,7 +75,7 @@ module control(
                 (XOR || XORI) ? 9 :
                 (SLT || SLTI) ? 11 :
                 (SLTU || SLTIU) ? 12 : 
-                NOR ? 10 : 0;
+                NOR ? 10 : 13;
         Memtoreg = LW || LB || LH || LBU || LHU;
         Memwrite = SW || SB || SH;
         Alu_src = ADDI || ANDI || ADDIU || SLTI || ORI || LW || SW || XORI || LUI || SLTIU || LB || LH || LBU || LHU || SB || SH;

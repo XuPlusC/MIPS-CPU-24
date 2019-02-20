@@ -27,11 +27,13 @@ module RAM #(parameter ADDR_WIDTH = 12) (Addr, Data_input, Mode, str, sel, clk, 
     
     reg [2**(ADDR_WIDTH-2)-1:0] i;
     reg [31:0] mem [2**(ADDR_WIDTH-2)-1:0];
-    reg [31:0] select_word;
+
+    wire [31:0] select_word;
 
     wire [ADDR_WIDTH-1:0]index;
 
     assign index = Addr[ADDR_WIDTH-1:2];
+    assign select_word = (sel == 1)?mem[index]:32'h0000_0000;
 
     initial begin
         for(i = 0; i <= 2**(ADDR_WIDTH-2)-1; i = i+1) begin
@@ -48,7 +50,7 @@ module RAM #(parameter ADDR_WIDTH = 12) (Addr, Data_input, Mode, str, sel, clk, 
         end
         else begin
             if(sel) begin
-                select_word = mem[index];
+                // select_word = mem[index];
                 if(str) begin
                     case(Mode)
                         Mode_byte: begin
@@ -81,7 +83,7 @@ module RAM #(parameter ADDR_WIDTH = 12) (Addr, Data_input, Mode, str, sel, clk, 
                 end
             end
             else begin
-                select_word = 32'h00000000;
+                // select_word = 32'h00000000;
             end
         end
     end
