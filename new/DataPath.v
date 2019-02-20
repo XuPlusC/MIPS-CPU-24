@@ -41,16 +41,16 @@ endmodule
 
 module Extern(Order, Signedext, imm, ext18);
     input [31:0]Order;
-    input Signext;
+    input Signedext;
     output [31:0]imm, ext18;
     wire [15:0]temp;
     assign temp = Order[15]?16'hFFFF:16'h0;
-    assign imm = (Signext == 1)?{temp, Order[15:0]}:{16'h0, Order[15:0]};
+    assign imm = (Signedext == 1)?{temp, Order[15:0]}:{16'h0, Order[15:0]};
     assign ext18 = {temp, Order[15:0]}<<2;
 endmodule
 
 module Data_to_Din(mem, Result1, PC_plus_4, Jal, Memtoreg, Din);
-    input [31:0] mem, Result1, PC;
+    input [31:0] mem, Result1, PC_plus_4;
     input Jal, Memtoreg;
     output [31:0] Din;
     assign Din = (Memtoreg == 1)?mem:((Jal == 1)?PC_plus_4:Result1);
