@@ -20,13 +20,19 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module top_of_all(clr,Go,clk,SEG,AN);
-	input clr,Go,clk;
-	output [7:0] AN,SEG;
+module top_of_all(/*clr,Go,*/clk,SEG,AN);
+	input /*clr,Go,*/clk;
+	output [7:0] SEG,AN;
 	
-	wire [31:0] Leddata,Count_all,Count_branch,Count_jmp;
+	reg [31:0] Leddata/*,Count_all,Count_branch,Count_jmp*/;
+	
+	initial begin
+		Leddata = 32'h87654321;
+	end
 	
 	show show(clk,Leddata,SEG,AN);
-	MIPS_CPU MIPS_CPU(clr,Go,clk,Leddata,Count_all,Count_branch,Count_jmp);
+	//test_reabmem_on_FPGA test_reabmem_on_FPGA(Leddata);
+	
+	/*MIPS_CPU MIPS_CPU(clr,Go,clk,Leddata,Count_all,Count_branch,Count_jmp);*/
 	
 endmodule
