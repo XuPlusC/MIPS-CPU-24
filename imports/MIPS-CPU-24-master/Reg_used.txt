@@ -1,0 +1,6 @@
+R1_used = ADD | ADDU | SUB | AND | OR | NOR | SLT | SLTU | JR | BEQ |
+                    BNE | ADDI | ANDI | ADDIU | SLTI | ORI | LW | SW | SLLV | SRLV |
+                    SRAV | SUBU | XOR | XORI | SLTIU | LB | LH | LBU | LHU | SB |
+                    SH | BLEZ | BGTZ | BLTZ | BGEZ;
+R2_used = SLL | SRA | SRL | ADD | ADDU | SUB | AND | OR | NOR | SLT | SLTU |
+                    BEQ | BNE | SW | SLLV | SRLV | SRAV | SUBU | XOR | SB | SH;
