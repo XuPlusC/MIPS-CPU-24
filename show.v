@@ -64,14 +64,14 @@ module ram8x4(clk,addr,data_in,data_out);
 	end
 	always @(negedge clk) begin
 		case(addr[2:0])
-			3'b000     : data_out=mem[0];
-			3'b001     : data_out=mem[1];
-			3'b010     : data_out=mem[2];
-			3'b011     : data_out=mem[3];
-			3'b100     : data_out=mem[4];
-			3'b101     : data_out=mem[5];
-			3'b110     : data_out=mem[6];
-			3'b111     : data_out=mem[7];
+			3'b000     : data_out=mem[7];
+			3'b001     : data_out=mem[6];
+			3'b010     : data_out=mem[5];
+			3'b011     : data_out=mem[4];
+			3'b100     : data_out=mem[3];
+			3'b101     : data_out=mem[2];
+			3'b110     : data_out=mem[1];
+			3'b111     : data_out=mem[0];
 		endcase
 	end                         // 读取addr单元的值输出                      
 endmodule
