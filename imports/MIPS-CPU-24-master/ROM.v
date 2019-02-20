@@ -12,8 +12,7 @@
 `timescale 1ns / 1ps
 `timescale 1ns / 1ps
 
-module ROM(Addr, Data_input, Mode, str, sel, clk, clr, ld, Data_output);
-    parameter ADDR_WIDTH = 5;
+module ROM #(parameter ADDR_WIDTH = 12) (Addr, Data_input, Mode, str, sel, clk, clr, ld, Data_output);
     parameter 
         Mode_byte       = 2'b00,
         Mode_halfword   = 2'b01,
@@ -35,6 +34,9 @@ module ROM(Addr, Data_input, Mode, str, sel, clk, clr, ld, Data_output);
     assign index = Addr[ADDR_WIDTH-1:2];
 
     initial begin
+        for(i = 0; i <= 2**(ADDR_WIDTH-2)-1; i = i+1) begin
+            mem[i] = 32'h0000;
+        end 
         $readmemh("D:/data_rom.dat",mem);
     end
 

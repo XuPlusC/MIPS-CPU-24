@@ -12,8 +12,7 @@
 `timescale 1ns / 1ps
 `timescale 1ns / 1ps
 
-module RAM(Addr, Data_input, Mode, str, sel, clk, clr, ld, Data_output);
-    parameter ADDR_WIDTH = 5;
+module RAM #(parameter ADDR_WIDTH = 12) (Addr, Data_input, Mode, str, sel, clk, clr, ld, Data_output);
     parameter 
         Mode_byte       = 2'b00,
         Mode_halfword   = 2'b01,
