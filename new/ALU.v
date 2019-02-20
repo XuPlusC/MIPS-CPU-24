@@ -5,14 +5,16 @@ module ALU(X, Y, ALU_OP, shamt, Result1, Result2, OF, UOF, Equal);
     input [3:0] ALU_OP;
     input [4:0] shamt;
     output reg [31:0]Result1, Result2;
-    output reg OF, UOF, Equal;
+    output reg OF, UOF;
+    output wire Equal;
+
+    assign Equal = (X == Y);
 
     initial begin
         Result1 = 0;
         Result2 = 0;
         OF = 0;
         UOF = 0;
-        Equal = 0;
     end
 
     always @(X or Y or ALU_OP or shamt)begin
@@ -20,7 +22,6 @@ module ALU(X, Y, ALU_OP, shamt, Result1, Result2, OF, UOF, Equal);
         Result2 = 32'h0000_0000;
         OF = 0;
         UOF = 0;
-        Equal = 0;
         case(ALU_OP)
         0:begin
             Result1 = Y << shamt;
@@ -71,9 +72,6 @@ module ALU(X, Y, ALU_OP, shamt, Result1, Result2, OF, UOF, Equal);
             Result2 = 32'h0000_0000;
         end
         endcase
-        if (X == Y)begin
-            Equal = 1;
-        end
         if (ALU_OP != 3 && ALU_OP != 4 )begin
             Result2 = 0;
         end

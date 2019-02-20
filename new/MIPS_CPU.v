@@ -60,7 +60,7 @@ module MIPS_CPU(clr, Go, clk, Leddata, Count_all, Count_branch, Count_jmp);
     //extern
     Extern extern1 (Order, Signedext, imm, ext18);
     //¼ÆÊý
-    Counter_circle counter_circle1(clk, clr, Branch_out, Jmp, enable, Count_all, Count_branch, Count_jmp);
+    Counter_circle counter_circle1(clk, clr, Branch_out, Jmp, Syscall, R1_out, Count_all, Count_branch, Count_jmp);
     //ROM
     ROM ROM1(PC[11:0], 0, 2'b10, 0, 1, clk, clr, 1, Order);
     //RAM
