@@ -28,7 +28,7 @@ module shamt_input(Order, R1_out, shift, Lui, shamt);
     initial begin
         shamt <= 0;
     end
-    always @(shift or Lui)begin
+    always @(shift or Lui or R1_out or Order)begin
         if(shift == 1)begin
             shamt = R1_out;
         end

@@ -4,6 +4,9 @@ module MIPS_CPU(clr, Go, clk, Leddata, Count_all, Count_branch, Count_jmp);
     input clr, clk, Go;
     output [31:0] Leddata;
     output [31:0]Count_all, Count_branch, Count_jmp;
+    // led temp
+    assign Leddata = 32'h0000_0000;
+    
     //control接出的控制信号
     wire Memtoreg, Memwrite, Alu_src, Regwrite, Syscall, Signedext, Regdst, 
         Beq, Bne, Jr, Jmp, Jal, Shift, Lui, Blez, Bgtz, Bz;
@@ -27,7 +30,7 @@ module MIPS_CPU(clr, Go, clk, Leddata, Count_all, Count_branch, Count_jmp);
     wire Branch_out;
     //PC相关
     wire [31:0]PC, ext18, PC_next_clk, PC_plus_4;
-    wire [26:0] target;
+    wire [25:0] target;
     wire enable;
     
     //RAM
@@ -44,7 +47,7 @@ module MIPS_CPU(clr, Go, clk, Leddata, Count_all, Count_branch, Count_jmp);
     Data_to_Din din1 (mem, Result1, PC_plus_4, Jal, Memtoreg, Din);
     //ALU 相关
     assign X = R1_out;
-    Mux_1 mux1 (R2_out, imm, Alu_src, Y);
+    Mux_1 #(32) mux1 (R2_out, imm, Alu_src, Y);
     shamt_input shamt1(Order, R1_out, Shift, Lui, shamt);
     ALU alu1 (X, Y, ALU_OP, shamt, Result1, Result2, OF, UOF, Equal);
     //branch 相关
@@ -59,7 +62,7 @@ module MIPS_CPU(clr, Go, clk, Leddata, Count_all, Count_branch, Count_jmp);
     //计数
     Counter_circle counter_circle1(clk, clr, Branch_out, Jmp, enable, Count_all, Count_branch, Count_jmp);
     //ROM
-    ROM ROM1(PC[4:0], 0, 10, 0, 1, clk, clr, 1, Order);
+    ROM ROM1(PC[4:0], 0, 2'b10, 0, 1, clk, clr, 1, Order);
     //RAM
     RAM RAM1(Result1[4:0], R2_out, Mode, Memwrite, 1, clk, clr, 1, mem);
 

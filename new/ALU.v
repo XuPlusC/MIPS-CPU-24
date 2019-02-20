@@ -8,30 +8,35 @@ module ALU(X, Y, ALU_OP, shamt, Result1, Result2, OF, UOF, Equal);
     output reg OF, UOF, Equal;
 
     initial begin
-        Result1 <= 0;
-        Result2 <= 0;
-        OF <= 0;
-        UOF <= 0;
-        Equal <= 0;
+        Result1 = 0;
+        Result2 = 0;
+        OF = 0;
+        UOF = 0;
+        Equal = 0;
     end
 
-    always @(X or Y or ALU_OP)begin
+    always @(X or Y or ALU_OP or shamt)begin
+        Result1 = 32'h0000_0000;
+        Result2 = 32'h0000_0000;
+        OF = 0;
+        UOF = 0;
+        Equal = 0;
         case(ALU_OP)
         0:begin
-            Result1 <= Y << shamt;
+            Result1 = Y << shamt;
         end
         1:begin
-            Result1 <= $signed(Y) >>> shamt;
+            Result1 = $signed(Y) >>> shamt;
         end
         2:begin
-            Result1 <= Y >> shamt;
+            Result1 = Y >> shamt;
         end
         3:begin
-            {Result2, Result1} <= X * Y;
+            {Result2, Result1} = X * Y;
         end
         4:begin
-            Result1 <= X / Y;
-            Result2 <= X % Y;
+            Result1 = X / Y;
+            Result2 = X % Y;
         end
         5:begin
             Result1 = X + Y;
@@ -44,33 +49,37 @@ module ALU(X, Y, ALU_OP, shamt, Result1, Result2, OF, UOF, Equal);
             UOF = Result1 > X;
         end
         7:begin
-            Result1 <= X & Y;
+            Result1 = X & Y;
         end
         8:begin
-            Result1 <= X | Y;
+            Result1 = X | Y;
         end
         9:begin
-            Result1 <= X ^ Y;
+            Result1 = X ^ Y;
         end
         10:begin
-            Result1 <= ~(X | Y);
+            Result1 = ~(X | Y);
         end
         11:begin
-            Result1 <= ($signed(X) < $signed(Y)) ? 1 : 0;
+            Result1 = ($signed(X) < $signed(Y)) ? 1 : 0;
         end
         12:begin
-            Result1 <= (X < Y) ? 1 : 0;
+            Result1 = (X < Y) ? 1 : 0;
+        end
+        default: begin
+            Result1 = 32'h0000_0000;
+            Result2 = 32'h0000_0000;
         end
         endcase
         if (X == Y)begin
-            Equal <= 1;
+            Equal = 1;
         end
         if (ALU_OP != 3 && ALU_OP != 4 )begin
-            Result2 <= 0;
+            Result2 = 0;
         end
         if (ALU_OP != 5 && ALU_OP != 6 )begin
-            UOF <= 0;
-            OF <= 0;
+            UOF = 0;
+            OF = 0;
         end
     end
 endmodule
