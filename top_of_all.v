@@ -61,7 +61,7 @@ module divider_dif(clk, choose_Hz,clk_N);
 	//00:1000Hz,01:100Hz,10:10Hz,11:1Hz
 	output reg clk_N;                   // 分频后的时钟
 	reg [31:0] N;
-	reg [21:0] counter;             /* 计数器变量，通过计数实现分频。
+	reg [31:0] counter;             /* 计数器变量，通过计数实现分频。
 									   当计数器从0计数到(N/2-1)时，
 									   输出时钟翻转，计数器清零 */ 
 	initial begin
@@ -81,14 +81,14 @@ module divider_dif(clk, choose_Hz,clk_N);
 	
 	always @(posedge clk)begin    // 时钟上升沿
 		// 功能实现
-		if(counter == ((N/2)-1))
+		if(counter % N == 0)
 			begin
-			clk_N = ~ clk_N;		//输出时钟翻转
-			counter = 0;		//计数器清零
+				clk_N = ~ clk_N;		//输出时钟翻转
+				counter = 1;		//计数器清零
 			end
 		else
 			begin
-			counter = counter + 1;//计数器加一
+				counter = counter + 1;//计数器加一
 			end
 	end                           
 endmodule
