@@ -91,6 +91,11 @@ module EX_MEM(
 			RD2_out = RD2_in;
 			Write_Reg_out = Write_Reg_in;
 			Enable_out = Enable_in;
+			Byte_out = Byte_in;
+			Signext2_out = Signedext_in; 
+			R1_used_out = R1_used_in;
+			R2_used_out = R2_used_in;
+
 		end
 		else begin
 		//do nothing
