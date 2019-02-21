@@ -93,11 +93,20 @@ module RAM #(parameter ADDR_WIDTH = 12) (Addr, Data_input, Mode, str, sel, clk, 
     wire [7:0] mux_in_15_8_0, mux_in_15_8_1, mux_in_15_8_2, mux_in_15_8_3;
     // wire [7:0] mux_in_23_16_0, mux_in_23_16_1, mux_in_23_16_2, mux_in_23_16_3;
     // wire [7:0] mux_in_31_24_0, mux_in_31_24_1, mux_in_31_24_2, mux_in_31_24_3;
-    assign mux_out_7_0 = ((Mode == Mode_halfword) && (Addr[1] == 1))?(select_word[23:16]):(select_word[7:0]);
-    // assign mux_out_15_8 = (Mode == Mode_byte)? 8'b0 : (
-    //                             (Addr[1] == 1)? select_word[31:24]:
-    //                             select_word[15:8]
-    //                         );
+    assign mux_out_7_0 = (Mode == Mode_halfword)?((Addr[1] == 1)?select_word[23:16]:select_word[7:0]):
+                        (Mode == Mode_byte)?
+                        (
+                            (Addr[1:0] == 2'b00)?select_word[7:0]:
+                            (
+                                (Addr[1:0] == 2'b01)?select_word[15:8]:
+                                (
+                                    (Addr[1:0] == 2'b10)?select_word[23:16]:
+                                    (
+                                        select_word[31:24]
+                                    )
+                                )
+                            )
+                        ):select_word[7:0];
 
     assign mux_in_15_8_0 = 8'b0;
     assign mux_in_15_8_1 = (Addr[1] == 1)?(select_word[31:24]):(select_word[15:8]);
