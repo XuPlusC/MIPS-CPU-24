@@ -106,4 +106,11 @@ module Ideal_Pipeline_CPU(input clr, Go, clk,
         //aluA, aluB
         assign ALU_A = ID_EX_RD1_out;
         Mux_1 #(32) mux_alu (ID_EX_RD2_out, ID_EX_imm, ID_EX_Alu_src_out, ALU_B);
+
+        //count EX½×¶Î
+        Counter_circle counter_circle1(clk, clr, branch, ID_EX_Jmp_out, ID_EX_Syscall, ID_EX_RD1_out, Count_all, Count_branch, Count_jmp);
+
+        //LedData EX½×¶Î
+        LedData led1(ID_EX_Syscall, ID_EX_RD1_out, ID_EX_RD2_out, clk, clr, leddata);
+
 endmodule
