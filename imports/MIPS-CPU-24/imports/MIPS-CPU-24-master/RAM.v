@@ -1,3 +1,15 @@
+// RAM(32bit)
+// input [9:0] Addr, [31:0] Data_input, [1:0] Mode, str (write enable),
+// sel (select signal, set to 1 bydefault), clk, clr, ld (write enable, set to 1 by default)
+// output Data_output[31:0]
+
+// Definition for signal 'Mode':
+//  00  visit by byte 
+//  01  visit by half-word
+//  10  visit by word
+//  11  (reserved) visit by double-word (64-bit)
+
+`timescale 1ns / 1ps
 `timescale 1ns / 1ps
 
 module RAM #(parameter ADDR_WIDTH = 12) (Addr, Data_input, Mode, str, sel, clk, clr, ld, Data_output);
