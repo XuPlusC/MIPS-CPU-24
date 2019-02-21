@@ -70,6 +70,6 @@ module MIPS_CPU(clr, Go, clk, Leddata, Count_all, Count_branch, Count_jmp);
 
 
     //Leddata display
-    // LedData Led1(Syscall, R1_out, R2_out, clk, clr, Leddata);
-    assign Leddata = Order;
+    LedData Led1(Syscall, R1_out, R2_out, clk, clr, Leddata);
+    // assign Leddata = Order;
 endmodule
