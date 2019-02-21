@@ -14,6 +14,8 @@ module Ideal_Pipeline_CPU(input clr, Go, clk,
         wire IF_ID_clr, IF_ID_Enable;
         wire [31:0]IF_ID_Order_out, IF_ID_PC_plus_4_out;
         wire IF_ID_Enable_out;
+        assign IF_ID_clr = clr;
+        assign IF_ID_Enable = 1;
         IF_ID pipeline1(Order, PC_plus_4, clk, IF_ID_clr, IF_ID_Enable, // ‰»Î–≈∫≈
                         IF_ID_Order_out, IF_ID_PC_plus_4_out, IF_ID_Enable_out);
         
@@ -41,6 +43,8 @@ module Ideal_Pipeline_CPU(input clr, Go, clk,
         wire [4:0]ID_EX_WriteReg_out;
         wire ID_EX_Memtoreg_out, ID_EX_Memwrite_out, ID_EX_Alu_src_out, ID_EX_Regwrite_out, ID_EX_Syscall_out, ID_EX_Signedext_out, ID_EX_Regdst_out, ID_EX_Beq_out, ID_EX_Bne_out, ID_EX_Jr_out, ID_EX_Jmp_out, ID_EX_Jal_out, ID_EX_Shift_out, ID_EX_Lui_out, ID_EX_Blez_out, ID_EX_Bgtz_out, ID_EX_Bz_out, ID_EX_Byte_out, ID_EX_Signext2_out, ID_EX_R1_used_out, ID_EX_R2_used_out,
               ID_EX_Enable_out;
+        assign ID_EX_clr = clr;
+        assign ID_EX_Enable_in = IF_ID_Enable_out;
         ID_EX pipeline2(ALU_OP, Memtoreg, Memwrite, Alu_src, Regwrite, Syscall, Signedext, Regdst, Beq, Bne, Jr, Jmp, Jal, Shift, Lui, Blez, Bgtz, Bz, Mode, Byte, Signext2, R1_used, R2_used,
                 IF_ID_Order_out, IF_ID_PC_plus_4_out, R1_out, R2_out, imm, WriteReg, clk, ID_EX_clr, ID_EX_Enable_in, // ‰»Î–≈∫≈
                 ID_EX_ALU_OP_out, ID_EX_Memtoreg_out, ID_EX_Memwrite_out, ID_EX_Alu_src_out, ID_EX_Regwrite_out, ID_EX_Syscall_out, ID_EX_Signedext_out, ID_EX_Regdst_out, ID_EX_Beq_out, ID_EX_Bne_out, ID_EX_Jr_out, ID_EX_Jmp_out, ID_EX_Jal_out, ID_EX_Shift_out, ID_EX_Lui_out, ID_EX_Blez_out, ID_EX_Bgtz_out, ID_EX_Bz_out, ID_EX_Mode_out, ID_EX_Byte_out, ID_EX_Signext2_out, ID_EX_R1_used_out, ID_EX_R2_used_out,
@@ -108,9 +112,9 @@ module Ideal_Pipeline_CPU(input clr, Go, clk,
         Mux_1 #(32) mux_alu (ID_EX_RD2_out, ID_EX_imm, ID_EX_Alu_src_out, ALU_B);
 
         //count EXΩ◊∂Œ
-        Counter_circle counter_circle1(clk, clr, branch, ID_EX_Jmp_out, ID_EX_Syscall, ID_EX_RD1_out, Count_all, Count_branch, Count_jmp);
+        Counter_circle counter_circle1(clk, clr, branch, ID_EX_Jmp_out, ID_EX_Syscall_out, ID_EX_RD1_out, Count_all, Count_branch, Count_jmp);
 
         //LedData EXΩ◊∂Œ
-        LedData led1(ID_EX_Syscall, ID_EX_RD1_out, ID_EX_RD2_out, clk, clr, leddata);
+        LedData led1(ID_EX_Syscall_out, ID_EX_RD1_out, ID_EX_RD2_out, clk, clr, Leddata);
 
 endmodule
