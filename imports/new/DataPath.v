@@ -24,19 +24,28 @@ module shamt_input(Order, R1_out, shift, Lui, shamt);
     input [31:0] Order;
     input [31:0] R1_out;
     input shift, Lui;
-    output [4:0]shamt;
-    assign shamt = (shift == 1) ? R1_out :
-                    (Lui == 1) ? 16 : Order [10:6];
+    output reg [4:0]shamt;
+    initial begin
+        shamt <= 0;
+    end
+    always @(shift or Lui or R1_out or Order)begin
+        if(shift == 1)begin
+            shamt = R1_out;
+        end
+        else if (Lui == 1)begin
+            shamt = 16;
+        end
+        else shamt = Order[10:6];
+    end
 endmodule
 
-module Extern(Order, Signedext, imm, ext18);
+module Extern(Order, Signedext, imm);
     input [31:0]Order;
     input Signedext;
-    output [31:0]imm, ext18;
+    output [31:0]imm;
     wire [15:0]temp;
     assign temp = Order[15]?16'hFFFF:16'h0;
     assign imm = (Signedext == 1)?{temp, Order[15:0]}:{16'h0, Order[15:0]};
-    assign ext18 = {temp, Order[15:0]}<<2;
 endmodule
 
 module Data_to_Din(Byte, Signext2, mem, Result1, PC_plus_4, Jal, Memtoreg, Din);

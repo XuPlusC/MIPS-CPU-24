@@ -6,13 +6,13 @@ module control(
     output reg  [3:0]ALU_OP,
     output reg  Memtoreg, Memwrite, Alu_src, Regwrite, Syscall, Signedext, Regdst, Beq, Bne, Jr, Jmp, Jal, Shift, Lui, Blez, Bgtz, Bz,
     output reg[1:0]Mode,
-	output reg Byte, Signext2
+	output reg Byte, Signext2, R1_used, R2_used
     );
     reg SLL, SRA, SRL, ADD, ADDU, SUB, AND, OR, NOR, SLT, SLTU, JR, SYSCALL, J, JAL, BEQ, BNE, ADDI, ANDI, ADDIU, SLTI, ORI, LW, SW, SLLV, SRLV, SRAV, SUBU, XOR, XORI, LUI, SLTIU, LB, LH, LBU, LHU, SB, SH, BLEZ, BGTZ, BLTZ, BGEZ;
     reg R_type;
     initial begin
 		SLL = 0; SRA = 0; SRL = 0; ADD = 0; ADDU = 0; SUB = 0; AND = 0; OR = 0; NOR = 0; SLT = 0; SLTU = 0; JR = 0; SYSCALL = 0; J = 0; JAL = 0; BEQ = 0; BNE = 0; ADDI = 0; ANDI = 0; ADDIU = 0; SLTI = 0; ORI = 0; LW = 0; SW = 0; SLLV = 0; SRLV = 0; SRAV = 0; SUBU = 0; XOR = 0; XORI = 0; LUI = 0; SLTIU = 0; LB = 0; LH = 0; LBU = 0; LHU = 0; SB = 0; SH = 0; BLEZ = 0; BGTZ = 0; BLTZ = 0; BGEZ = 0;
-		Byte = 0; Signext2 = 0;
+		Byte = 0; Signext2 = 0;   R1_used=0;  R2_used=0;
 	end
 	
 	always @(OP or FUNC) begin
@@ -78,7 +78,7 @@ module control(
                 (SLT || SLTI) ? 11 :
                 (SLTU || SLTIU) ? 12 : 
                 NOR ? 10 : 13;
-        Memtoreg = LW || /*LB || LH ||*/ LBU || LHU;
+        Memtoreg = LW || LB || LH || LBU || LHU;
         Memwrite = SW || SB || SH;
         Alu_src = ADDI || ANDI || ADDIU || SLTI || ORI || LW || SW || XORI || LUI || SLTIU || LB || LH || LBU || LHU || SB || SH;
         Regwrite = R_type || JAL || ADDI || ANDI || ADDIU || SLTI || ORI || LW || XORI || LUI || SLTIU || LB || LH || LBU || LHU;
@@ -99,5 +99,8 @@ module control(
                 (LH || LHU || SH)? 2'b01 : 2'b10;
 		Byte = (LB || LBU) ?1 :0;
 		Signext2 = (LB || LH) ?1:0;
+		R1_used = ADD | ADDU | SUB | AND | OR | NOR | SLT | SLTU | JR | BEQ | BNE | ADDI | ANDI | ADDIU | SLTI | ORI | LW | SW |
+		   SLLV | SRLV | SRAV | SUBU | XOR | XORI | SLTIU | LB | LH | LBU | LHU | SB | SH | BLEZ | BGTZ |  BLTZ | BGEZ;
+        R2_used = SLL | SRA | SRL | ADD | ADDU | SUB | AND | OR | NOR | SLT | SLTU | BEQ | BNE | SW | SLLV | SRLV | SRAV | SUBU | XOR | SB | SH;
 	end
 endmodule
