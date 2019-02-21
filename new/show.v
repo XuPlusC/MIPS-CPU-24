@@ -85,7 +85,7 @@ module top_of_divider_counter(clk, out);
 
 
 	divider instantiation_of_divider(clk,clk_N);//实例化divider
-	counter instantiation_of_counter(clk_N,out);
+	counter1 instantiation_of_counter(clk_N,out);
 endmodule
 
 module divider #(parameter N = 1_500_00 ) (clk, clk_N);
@@ -114,7 +114,7 @@ module divider #(parameter N = 1_500_00 ) (clk, clk_N);
 	end                           
 endmodule
 
-module counter(clk, out);
+module counter1(clk, out);
 	input clk;                    // 计数时钟
 	output [2:0] out;             // 计数值
 	reg [2:0] out;				  // 在always语句中对out进行赋值，声明为reg

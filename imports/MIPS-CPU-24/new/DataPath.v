@@ -24,19 +24,9 @@ module shamt_input(Order, R1_out, shift, Lui, shamt);
     input [31:0] Order;
     input [31:0] R1_out;
     input shift, Lui;
-    output reg [4:0]shamt;
-    initial begin
-        shamt <= 0;
-    end
-    always @(shift or Lui or R1_out or Order)begin
-        if(shift == 1)begin
-            shamt = R1_out;
-        end
-        else if (Lui == 1)begin
-            shamt = 16;
-        end
-        else shamt = Order[10:6];
-    end
+    output [4:0]shamt;
+    assign shamt = (shift == 1) ? R1_out :
+                    (Lui == 1) ? 16 : Order [10:6];
 endmodule
 
 module Extern(Order, Signedext, imm, ext18);
