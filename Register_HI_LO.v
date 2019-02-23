@@ -31,6 +31,11 @@ module Register_HI_LO(clk,clr,WE_HI,WE_LO,HI_in,LO_in,HI_out,LO_out);
 	output reg [WIDTH-1:0] HI_out,LO_out;
 	//HI,LO中的值
 	
+	initial begin
+		HI_out = 0;
+		LO_out = 0;
+	end
+	
 	always @(posedge clk or posedge clr) begin
 		if(clr == 1) begin
 			HI_out = 0;
