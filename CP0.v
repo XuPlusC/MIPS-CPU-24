@@ -22,17 +22,20 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module CP0(R_in,W_in,Din,WE,sel,clk,clr,R_out);
+module CP0(R_in,W_in,Din,EPC_in,WE,EPC_WE,sel,clk,clr,R_out,EPC_out);
 	parameter WIDTH = 32;
-	input [4:0] R_in;//需要读取的寄存器编号
-	input [4:0] W_in;//需要写入的寄存器编号
-	input [WIDTH-1:0] Din;//需要写入的值
+	input [4:0] R_in;//�?要读取的寄存器编�?
+	input [4:0] W_in;//�?要写入的寄存器编�?
+	input [WIDTH-1:0] Din;//�?要写入的�?
+	input [WIDTH-1:0] EPC_in;//为EPC单独暴露的写数据端口
+	input EPC_WE;//为EPC单独暴露的写使能端口
 	input WE,clk,clr;
-	//写使能，高电平有效
-	//异步清零，优先级最高
+	//写使能，高电平有�?
+	//异步清零，优先级�?�?
 	input [2:0] sel;
 	//为了支持MTC0,MFC0的sel域增添的选择信号
 	output reg [WIDTH-1:0] R_out;
+	output reg [WIDTH-1:0] EPC_out;
 	
 	wire WE_0,WE_1,WE_2,WE_3,WE_4,WE_5,WE_6,WE_7;
 	wire [WIDTH-1:0] R_out_0;
@@ -43,6 +46,19 @@ module CP0(R_in,W_in,Din,WE,sel,clk,clr,R_out);
 	wire [WIDTH-1:0] R_out_5;
 	wire [WIDTH-1:0] R_out_6;
 	wire [WIDTH-1:0] R_out_7;
+	
+	initial begin
+		EPC_out = 0;
+	end
+	
+	always @(posedge clk or posedge clr)begin
+		if(clr) begin
+			EPC_out = 0;
+		end
+		else if(WE) begin
+			EPC_out = EPC_in;
+		end
+	end
 	
 	always @(*) begin
 		case(sel)
@@ -75,7 +91,7 @@ module decoder_for_CP0(signal_in,select,signal_out);
 	input signal_in;
 	input [2:0] select;
 	output reg [7:0] signal_out;
-	//本模块是为了CP0模块中的写使能信号专用的3_8译码器
+	//本模块是为了CP0模块中的写使能信号专用的3_8译码�?
 	
 	reg zero;
 	
@@ -86,96 +102,106 @@ module decoder_for_CP0(signal_in,select,signal_out);
 	
 	always@(signal_in or select) begin
 		if(select == 0) begin
-			signal_out[0] = signal_in;
-			signal_out[1] = zero;
-			signal_out[2] = zero;
-			signal_out[3] = zero;
-			signal_out[4] = zero;
-			signal_out[5] = zero;
-			signal_out[6] = zero;
-			signal_out[7] = zero;
+			signal_out[0] <= signal_in;
+			signal_out[1] <= zero;
+			signal_out[2] <= zero;
+			signal_out[3] <= zero;
+			signal_out[4] <= zero;
+			signal_out[5] <= zero;
+			signal_out[6] <= zero;
+			signal_out[7] <= zero;
 		end
 		else if(select == 1) begin
-			signal_out[0] = zero;
-			signal_out[1] = signal_in;
-			signal_out[2] = zero;
-			signal_out[3] = zero;
-			signal_out[4] = zero;
-			signal_out[5] = zero;
-			signal_out[6] = zero;
-			signal_out[7] = zero;
+			signal_out[0] <= zero;
+			signal_out[1] <= signal_in;
+			signal_out[2] <= zero;
+			signal_out[3] <= zero;
+			signal_out[4] <= zero;
+			signal_out[5] <= zero;
+			signal_out[6] <= zero;
+			signal_out[7] <= zero;
 		end
 		else if(select == 2) begin
-			signal_out[0] = zero;
-			signal_out[1] = zero;
-			signal_out[2] = signal_in;
-			signal_out[3] = zero;
-			signal_out[4] = zero;
-			signal_out[5] = zero;
-			signal_out[6] = zero;
-			signal_out[7] = zero;
+			signal_out[0] <= zero;
+			signal_out[1] <= zero;
+			signal_out[2] <= signal_in;
+			signal_out[3] <= zero;
+			signal_out[4] <= zero;
+			signal_out[5] <= zero;
+			signal_out[6] <= zero;
+			signal_out[7] <= zero;
 		end
 		else if(select == 3) begin
-			signal_out[0] = zero;
-			signal_out[1] = zero;
-			signal_out[2] = zero;
-			signal_out[3] = signal_in;
-			signal_out[4] = zero;
-			signal_out[5] = zero;
-			signal_out[6] = zero;
-			signal_out[7] = zero;
+			signal_out[0] <= zero;
+			signal_out[1] <= zero;
+			signal_out[2] <= zero;
+			signal_out[3] <= signal_in;
+			signal_out[4] <= zero;
+			signal_out[5] <= zero;
+			signal_out[6] <= zero;
+			signal_out[7] <= zero;
 		end
 		else if(select == 4) begin
-			signal_out[0] = zero;
-			signal_out[1] = zero;
-			signal_out[2] = zero;
-			signal_out[3] = zero;
-			signal_out[4] = signal_in;
-			signal_out[5] = zero;
-			signal_out[6] = zero;
-			signal_out[7] = zero;
+			signal_out[0] <= zero;
+			signal_out[1] <= zero;
+			signal_out[2] <= zero;
+			signal_out[3] <= zero;
+			signal_out[4] <= signal_in;
+			signal_out[5] <= zero;
+			signal_out[6] <= zero;
+			signal_out[7] <= zero;
 		end
 		else if(select == 5) begin
-			signal_out[0] = zero;
-			signal_out[1] = zero;
-			signal_out[2] = zero;
-			signal_out[3] = zero;
-			signal_out[4] = zero;
-			signal_out[5] = signal_in;
-			signal_out[6] = zero;
-			signal_out[7] = zero;
+			signal_out[0] <= zero;
+			signal_out[1] <= zero;
+			signal_out[2] <= zero;
+			signal_out[3] <= zero;
+			signal_out[4] <= zero;
+			signal_out[5] <= signal_in;
+			signal_out[6] <= zero;
+			signal_out[7] <= zero;
 		end
 		else if(select == 6) begin
-			signal_out[0] = zero;
-			signal_out[1] = zero;
-			signal_out[2] = zero;
-			signal_out[3] = zero;
-			signal_out[4] = zero;
-			signal_out[5] = zero;
-			signal_out[6] = signal_in;
-			signal_out[7] = zero;
+			signal_out[0] <= zero;
+			signal_out[1] <= zero;
+			signal_out[2] <= zero;
+			signal_out[3] <= zero;
+			signal_out[4] <= zero;
+			signal_out[5] <= zero;
+			signal_out[6] <= signal_in;
+			signal_out[7] <= zero;
 		end
 		else if(select == 7) begin
-			signal_out[0] = zero;
-			signal_out[1] = zero;
-			signal_out[2] = zero;
-			signal_out[3] = zero;
-			signal_out[4] = zero;
-			signal_out[5] = zero;
-			signal_out[6] = zero;
-			signal_out[7] = signal_in;
+			signal_out[0] <= zero;
+			signal_out[1] <= zero;
+			signal_out[2] <= zero;
+			signal_out[3] <= zero;
+			signal_out[4] <= zero;
+			signal_out[5] <= zero;
+			signal_out[6] <= zero;
+			signal_out[7] <= signal_in;
+		end
+		else begin
+			signal_out[0] <= zero;
+			signal_out[1] <= zero;
+			signal_out[2] <= zero;
+			signal_out[3] <= zero;
+			signal_out[4] <= zero;
+			signal_out[5] <= zero;
+			signal_out[6] <= zero;
+			signal_out[7] <= zero;
 		end
 	end
 endmodule
 
 module Regfile_CP0(R_in,W_in,Din,WE,clk,clr,R_out);
 	parameter WIDTH = 32;
-	input [4:0] R_in;//需要读取的寄存器编号
-	input [4:0] W_in;//需要写入的寄存器编号
-	input [WIDTH-1:0] Din;//需要写入的值
+	input [4:0] R_in;//�?要读取的寄存器编�?
+	input [4:0] W_in;//�?要写入的寄存器编�?
+	input [WIDTH-1:0] Din;//�?要写入的�?
 	input WE,clk,clr;
-	//写使能，高电平有效
-	//异步清零，优先级最高
+	//写使能，高电平有�?
+	//异步清零，优先级�?�?
 	output [WIDTH-1:0] R_out;
 	
 	reg [WIDTH-1:0] Reg [31:0];
@@ -188,10 +214,14 @@ module Regfile_CP0(R_in,W_in,Din,WE,clk,clr,R_out);
 	
 	always @(posedge clk or posedge clr)begin
 		if(clr) begin
-			for(i = 0;i<32;i = i+1) Reg[i] = 0;
+			for(i = 0;i < 32;i = i+1)
+				Reg[i] = 0;
 		end
-		else if(WE) begin
+		else if(WE == 1) begin
 			Reg[W_in] = Din;
+		end
+		else begin
+			Reg[W_in] = Reg[W_in];
 		end
 	end
 	
