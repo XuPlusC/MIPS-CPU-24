@@ -4,15 +4,16 @@ module control(
     input [5:0] OP,
     input [5:0]FUNC,
     output reg  [3:0]ALU_OP,
-    output reg  Memtoreg, Memwrite, Alu_src, Regwrite, Syscall, Signedext, Regdst, Beq, Bne, Jr, Jmp, Jal, Shift, Lui, Blez, Bgtz, Bz,
+    output reg  MemRead, Memwrite, Alu_src, Regwrite, Syscall, Signedext, Regdst, Beq, Bne, Jr, Jmp, Jal, Shift, Lui, Blez, Bgtz, Bz,
     output reg[1:0]Mode,
-	output reg Byte, Signext2, R1_used, R2_used
+	output reg Byte, Signext2, R1_used, R2_used, HI_LO_Write_enable, HI_Write_to_GPR, LO_Write_to_GPR
     );
     reg SLL, SRA, SRL, ADD, ADDU, SUB, AND, OR, NOR, SLT, SLTU, JR, SYSCALL, J, JAL, BEQ, BNE, ADDI, ANDI, ADDIU, SLTI, ORI, LW, SW, SLLV, SRLV, SRAV, SUBU, XOR, XORI, LUI, SLTIU, LB, LH, LBU, LHU, SB, SH, BLEZ, BGTZ, BLTZ, BGEZ;
-    reg R_type;
+    reg R_type, MULTU, DIVU, MFLO, MFHI;
     initial begin
 		SLL = 0; SRA = 0; SRL = 0; ADD = 0; ADDU = 0; SUB = 0; AND = 0; OR = 0; NOR = 0; SLT = 0; SLTU = 0; JR = 0; SYSCALL = 0; J = 0; JAL = 0; BEQ = 0; BNE = 0; ADDI = 0; ANDI = 0; ADDIU = 0; SLTI = 0; ORI = 0; LW = 0; SW = 0; SLLV = 0; SRLV = 0; SRAV = 0; SUBU = 0; XOR = 0; XORI = 0; LUI = 0; SLTIU = 0; LB = 0; LH = 0; LBU = 0; LHU = 0; SB = 0; SH = 0; BLEZ = 0; BGTZ = 0; BLTZ = 0; BGEZ = 0;
 		Byte = 0; Signext2 = 0;   R1_used=0;  R2_used=0;
+		R_type = 0; MULTU = 0; DIVU = 0; MFLO = 0; MFHI = 0;
 	end
 	
 	always @(OP or FUNC) begin
@@ -40,7 +41,8 @@ module control(
 		SW = (OP == 43)?1:0;
 		
 		if(OP!=0)begin
-			SLL = 0;SRA = 0;SRL = 0;ADD = 0;ADDU = 0;SUB = 0;AND = 0;OR = 0;NOR = 0;SLT = 0;SLTU = 0;JR = 0;SYSCALL = 0;SLLV = 0;SRLV = 0;SRAV = 0;SUBU = 0;XOR = 0;		
+			SLL = 0;SRA = 0;SRL = 0;ADD = 0;ADDU = 0;SUB = 0;AND = 0;OR = 0;NOR = 0;SLT = 0;SLTU = 0;JR = 0;SYSCALL = 0;SLLV = 0;SRLV = 0;SRAV = 0;SUBU = 0;XOR = 0;	
+			MULTU = 0; DIVU = 0; MFLO = 0; MFHI = 0;	
 		end		
 		else begin
 		SLL = (FUNC == 0)?1:0;
@@ -61,46 +63,57 @@ module control(
 		NOR = (FUNC == 39)?1:0;
 		SLT = (FUNC == 42)?1:0;
 		SLTU = (FUNC == 43)?1:0;
+		MULTU = (FUNC == 25)?1:0;
+		DIVU = (FUNC == 27)?1:0;
+		MFLO = (FUNC == 18)?1:0;
+		MFHI = (FUNC == 16)?1:0;
 		end
-        if (OP == 0 && SYSCALL == 0)begin
+        if (OP == 0 & SYSCALL == 0 & MULTU == 0 & DIVU == 0)begin
             R_type = 1;
         end
         else R_type = 0;
 
-        ALU_OP = (ADD || ADDU || ADDI || ADDIU || LW || SW || LB || LH || LBU || LHU || SB || SH) ? 5 :
-                (SLL || SLLV || LUI) ? 0 :
-                (SRA || SRAV) ? 1 :
-                (SRL || SRLV) ? 2 :
-                (SUB || SUBU) ? 6 :
-                (AND || ANDI) ? 7 :
-                (OR || ORI) ? 8 :
-                (XOR || XORI) ? 9 :
-                (SLT || SLTI) ? 11 :
-                (SLTU || SLTIU) ? 12 : 
-                NOR ? 10 : 13;
-        Memtoreg = LW || LB || LH || LBU || LHU;
-        Memwrite = SW || SB || SH;
-        Alu_src = ADDI || ANDI || ADDIU || SLTI || ORI || LW || SW || XORI || LUI || SLTIU || LB || LH || LBU || LHU || SB || SH;
-        Regwrite = R_type || JAL || ADDI || ANDI || ADDIU || SLTI || ORI || LW || XORI || LUI || SLTIU || LB || LH || LBU || LHU;
+        ALU_OP = (ADD | ADDU | ADDI | ADDIU | LW | SW | LB | LH | LBU | LHU | SB | SH) ? 5 :
+                (SLL | SLLV | LUI) ? 0 :
+                (SRA | SRAV) ? 1 :
+                (SRL | SRLV) ? 2 :
+                (SUB | SUBU) ? 6 :
+                (AND | ANDI) ? 7 :
+                (OR | ORI) ? 8 :
+                (XOR | XORI) ? 9 :
+                (SLT | SLTI) ? 11 :
+                (SLTU | SLTIU) ? 12 : 
+                NOR ? 10 : 
+                MULTU ? 3:       //��ʱ��ALU����˷��ͳ���?
+                DIVU ? 4 : 13;
+        MemRead = LW | LB | LH | LBU | LHU;
+        Memwrite = SW | SB | SH;
+        Alu_src = ADDI | ANDI | ADDIU | SLTI | ORI | LW | SW | XORI | LUI | SLTIU | LB | LH | LBU | LHU | SB | SH;
+        Regwrite = R_type | JAL | ADDI | ANDI | ADDIU | SLTI | ORI | LW | XORI | LUI | SLTIU | LB | LH | LBU | LHU | MFLO | MFHI;
         Syscall = SYSCALL;
-        Signedext = ADDI || ADDIU || SLTI || LW || SW || LB || LH || LBU || LHU || SB || SH;
+        Signedext = ADDI | ADDIU | SLTI | LW | SW | LB | LH | LBU | LHU | SB | SH;
         Regdst = R_type;
         Beq = BEQ;
         Bne = BNE;
         Jr = JR;
-        Jmp = JAL || Jr || J;
+        Jmp = JAL | Jr | J;
         Jal = JAL;
-        Shift = SLLV || SRLV || SRAV;
+        Shift = SLLV | SRLV | SRAV;
         Lui = LUI;
         Blez = BLEZ;
         Bgtz = BGTZ;
         Bz = (OP == 1)? 1 : 0;
-        Mode = (LB || LBU || SB)? 2'b00 :
-                (LH || LHU || SH)? 2'b01 : 2'b10;
-		Byte = (LB || LBU) ?1 :0;
-		Signext2 = (LB || LH) ?1:0;
+        Mode = (LB | LBU | SB)? 2'b00 :
+                (LH | LHU | SH)? 2'b01 : 2'b10;
+		Byte = (LB | LBU) ?1 :0;
+		Signext2 = (LB | LH) ?1:0;
 		R1_used = ADD | ADDU | SUB | AND | OR | NOR | SLT | SLTU | JR | BEQ | BNE | ADDI | ANDI | ADDIU | SLTI | ORI | LW | SW |
-		   SLLV | SRLV | SRAV | SUBU | XOR | XORI | SLTIU | LB | LH | LBU | LHU | SB | SH | BLEZ | BGTZ |  BLTZ | BGEZ | Syscall;
-        R2_used = SLL | SRA | SRL | ADD | ADDU | SUB | AND | OR | NOR | SLT | SLTU | BEQ | BNE | SW | SLLV | SRLV | SRAV | SUBU | XOR | SB | SH | Syscall;
+		   SLLV | SRLV | SRAV | SUBU | XOR | XORI | SLTIU | LB | LH | LBU | LHU | SB | SH | BLEZ | BGTZ |  BLTZ | BGEZ | Syscall |
+		   MULTU | DIVU;
+        R2_used = SLL | SRA | SRL | ADD | ADDU | SUB | AND | OR | NOR | SLT | SLTU | BEQ | BNE | SW | SLLV | SRLV | SRAV | SUBU | XOR | SB | SH | Syscall |
+            MULTU | DIVU | MFLO | MFHI;
+	    HI_LO_Write_enable = MULTU | DIVU;
+	    LO_Write_to_GPR = MFLO;
+	    HI_Write_to_GPR = MFHI;
 	end
 endmodule

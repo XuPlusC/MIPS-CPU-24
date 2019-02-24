@@ -5,7 +5,7 @@ module Reg_Conflict_Detection_Bypass(input R1_used, R2_used,    //R1寄存器读有效
                             input EX_Reg_Write, MEM_Reg_Write,  //EX、MEM阶段的指令需要写寄存器
                             input EX_Sel, MEM_Sel, //0代表写入RegFile的值为ALU的运算结果，1代表写入RegFile的值为访存结果
                             output [1:0]conflict_A, conflict_B,//0代表原值，1代表MEM阶段的ALU_result，2代表WB阶段的Read_data，3代表WB阶段的ALU_result
-                            output Load_use);     //1代表发生Load-Use数据相关，需暂停PC_register和IF_ID，插入一个气泡
+                            output load_use);     //1代表发生Load-Use数据相关，需暂停PC_register和IF_ID，插入一个气泡
         wire EX_R1_same, EX_R2_same;
         wire MEM_R1_same, MEM_R2_same;
         
@@ -23,5 +23,5 @@ module Reg_Conflict_Detection_Bypass(input R1_used, R2_used,    //R1寄存器读有效
                             (((~MEM_Sel) & MEM_Reg_Write & MEM_R2_same)?2'b11:
                             2'b00));
         
-        assign Load_use = EX_Sel & EX_Reg_Write & (EX_R1_same | EX_R2_same);
+        assign load_use = EX_Sel & EX_Reg_Write & (EX_R1_same | EX_R2_same);
 endmodule

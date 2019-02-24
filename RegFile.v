@@ -22,4 +22,5 @@ module RegFile(R1_in, R2_in, W_in, Din, WE, clk, R1_out, R2_out);
 
     assign R1_out = Reg[R1_in];
     assign R2_out = Reg[R2_in];
+    //assign Reg[0] = 32'h0;
 endmodule

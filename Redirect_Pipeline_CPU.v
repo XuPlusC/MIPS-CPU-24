@@ -1,145 +1,123 @@
 `timescale 1ns / 1ps
 
-module Redirect_Pipeline_CPU(input clr, Go, clk, 
+module Redirect_Pipeline_CPU(input rst, Go, clk, 
                         output [31:0]Leddata, Count_all, Count_branch, Count_jmp, Count_pipe, Count_load_use, Count_redirect);
-        
-        //取指令IF阶段
-        wire [31:0]PC_in, PC_out;
-        wire PC_enable;
-        register PC_register(PC_in, PC_enable, clk, clr, PC_out);
-        wire [31:0]PC_plus_4;
-        assign PC_plus_4 = PC_out + 4;
-        wire [31:0]Order;
-        ROM get_Order(PC_out[11:0], 0, 2'b10, 0 ,1, clk, clr, 1, Order);
-        wire IF_ID_clr, IF_ID_Enable;
-        wire [31:0]IF_ID_Order_out, IF_ID_PC_plus_4_out;
-        wire IF_ID_Enable_out;
-        IF_ID pipeline1(Order, PC_plus_4, clk, IF_ID_clr, IF_ID_Enable, //输入信号
-                        IF_ID_Order_out, IF_ID_PC_plus_4_out, IF_ID_Enable_out);
-        
-        //译码ID阶段
-        wire [5:0]OP, Func;
-        assign OP = IF_ID_Order_out[31:26];
-        assign Func = IF_ID_Order_out[5:0];
-        wire [3:0]ALU_OP;
-        wire Memtoreg, Memwrite, Alu_src, Regwrite, Syscall, Signedext, Regdst, Beq, Bne, Jr, Jmp, Jal, Shift, Lui, Blez, Bgtz, Bz;
-        wire [1:0]Mode;
-        wire Byte, Signext2, R1_used, R2_used;
-        control get_control_sign(OP, Func, ALU_OP, Memtoreg, Memwrite, Alu_src, Regwrite, Syscall, Signedext, Regdst, Beq, Bne, Jr, Jmp, 
-                Jal, Shift, Lui, Blez, Bgtz, Bz, Mode, Byte, Signext2, R1_used, R2_used);
-        wire [4:0]R1_in, R2_in, W_in;
-        wire [31:0]Din, R1_out, R2_out;
-        wire RegFile_Regwrite;
-        RegFile regfile1(R1_in, R2_in, W_in, Din, RegFile_Regwrite, clk, R1_out, R2_out);
-        wire [31:0]imm;
-        Extern extern1(IF_ID_Order_out, Signedext, imm);
-        wire [4:0]WriteReg;
-        wire ID_EX_clr, ID_EX_Enable;
-        wire [3:0]ID_EX_ALU_OP_out;
-        wire [1:0]ID_EX_Mode_out;
-        wire [31:0]ID_EX_Order_out, ID_EX_PC_plus_4_out, ID_EX_RD1_out, ID_EX_RD1_out_temp, ID_EX_RD2_out, ID_EX_RD2_out_temp, ID_EX_imm;
-        wire [4:0]ID_EX_WriteReg_out;
-        wire ID_EX_Memtoreg_out, ID_EX_Memwrite_out, ID_EX_Alu_src_out, ID_EX_Regwrite_out, ID_EX_Syscall_out, ID_EX_Signedext_out, ID_EX_Regdst_out, ID_EX_Beq_out, ID_EX_Bne_out, ID_EX_Jr_out, ID_EX_Jmp_out, ID_EX_Jal_out, ID_EX_Shift_out, ID_EX_Lui_out, ID_EX_Blez_out, ID_EX_Bgtz_out, ID_EX_Bz_out, ID_EX_Byte_out, ID_EX_Signext2_out, ID_EX_R1_used_out, ID_EX_R2_used_out,
-              ID_EX_Enable_out;
-        wire [1:0]conflict_A, conflict_B, EX_conflict_A, EX_conflict_B;
-        
-        //2.22
-        wire Syscall_to_Stop;
-        assign Syscall_to_Stop = ID_EX_Syscall_out & ~(ID_EX_RD1_out == 34) & (~Go);   
-              
-        ID_EX pipeline2(ALU_OP, Memtoreg, Memwrite, Alu_src, Regwrite, Syscall, Signedext, Regdst, Beq, Bne, Jr, Jmp, Jal, Shift, Lui, Blez, Bgtz, Bz, Mode, conflict_A, conflict_B, Byte, Signext2, R1_used, R2_used,
-                IF_ID_Order_out, IF_ID_PC_plus_4_out, R1_out, R2_out, imm, WriteReg, clk, ID_EX_clr, ID_EX_Enable, //输入信号
-                ID_EX_ALU_OP_out, ID_EX_Memtoreg_out, ID_EX_Memwrite_out, ID_EX_Alu_src_out, ID_EX_Regwrite_out, ID_EX_Syscall_out, ID_EX_Signedext_out, ID_EX_Regdst_out, ID_EX_Beq_out, ID_EX_Bne_out, ID_EX_Jr_out, ID_EX_Jmp_out, ID_EX_Jal_out, ID_EX_Shift_out, ID_EX_Lui_out, ID_EX_Blez_out, ID_EX_Bgtz_out, ID_EX_Bz_out, ID_EX_Mode_out, EX_conflict_A, EX_conflict_B, ID_EX_Byte_out, ID_EX_Signext2_out, ID_EX_R1_used_out, ID_EX_R2_used_out,
-                ID_EX_Order_out, ID_EX_PC_plus_4_out, ID_EX_RD1_out_temp, ID_EX_RD2_out_temp, ID_EX_imm, ID_EX_WriteReg_out, ID_EX_Enable_out) ;  //输出信号;
-        
-        //执行EX阶段
-        wire [31:0]ALU_A, ALU_B, Result1, Result2;
-        wire [4:0]shamt;
-        wire OF, UOF, Equal;
-        ALU alu1(ALU_A, ALU_B, ID_EX_ALU_OP_out, shamt, Result1, Result2, OF, UOF, Equal);
-        wire [3:0]EX_MEM_ALU_OP_out;
-        wire [1:0]EX_MEM_Mode_out;
-        wire [31:0]EX_MEM_Order_out, EX_MEM_PC_plus_4_out, EX_MEM_ALU_Result1_out, EX_MEM_ALU_Result2_out, EX_MEM_RD2_out;
-        wire [4:0]EX_MEM_WriteReg_out;
-        wire EX_MEM_Memtoreg_out, EX_MEM_Memwrite_out, EX_MEM_Alu_src_out, EX_MEM_Regwrite_out, EX_MEM_Syscall_out, EX_MEM_Signedext_out, EX_MEM_Regdst_out, EX_MEM_Beq_out, EX_MEM_Bne_out, EX_MEM_Jr_out, EX_MEM_Jmp_out, EX_MEM_Jal_out, EX_MEM_Shift_out, EX_MEM_Lui_out, EX_MEM_Blez_out, EX_MEM_Bgtz_out, EX_MEM_Bz_out, EX_MEM_Byte_out, EX_MEM_Signext2_out, EX_MEM_R1_used_out, EX_MEM_R2_used_out,
-        EX_MEM_ALU_OF_out, EX_MEM_ALU_UOF_out, EX_MEM_ALU_Equal_out, EX_MEM_Enable_out;
-        EX_MEM pipeline3(ID_EX_ALU_OP_out, ID_EX_Memtoreg_out, ID_EX_Memwrite_out, ID_EX_Alu_src_out, ID_EX_Regwrite_out, ID_EX_Syscall_out, ID_EX_Signedext_out, ID_EX_Regdst_out, ID_EX_Beq_out, ID_EX_Bne_out, ID_EX_Jr_out, ID_EX_Jmp_out, ID_EX_Jal_out, ID_EX_Shift_out, ID_EX_Lui_out, ID_EX_Blez_out, ID_EX_Bgtz_out, ID_EX_Bz_out, ID_EX_Mode_out, ID_EX_Byte_out, ID_EX_Signext2_out, ID_EX_R1_used_out, ID_EX_R2_used_out,
-                ID_EX_Order_out, ID_EX_PC_plus_4_out, Result1, Result2, OF, UOF, Equal, ID_EX_RD2_out, ID_EX_WriteReg_out, clk, clr, 1, //输入信号
-                EX_MEM_ALU_OP_out, EX_MEM_Memtoreg_out, EX_MEM_Memwrite_out, EX_MEM_Alu_src_out, EX_MEM_Regwrite_out, EX_MEM_Syscall_out, EX_MEM_Signedext_out, EX_MEM_Regdst_out, EX_MEM_Beq_out, EX_MEM_Bne_out, EX_MEM_Jr_out, EX_MEM_Jmp_out, EX_MEM_Jal_out, EX_MEM_Shift_out, EX_MEM_Lui_out, EX_MEM_Blez_out, EX_MEM_Bgtz_out, EX_MEM_Bz_out, EX_MEM_Mode_out, EX_MEM_Byte_out, EX_MEM_Signext2_out, EX_MEM_R1_used_out, EX_MEM_R2_used_out,
-                EX_MEM_Order_out, EX_MEM_PC_plus_4_out, EX_MEM_ALU_Result1_out, EX_MEM_ALU_Result2_out, EX_MEM_ALU_OF_out, EX_MEM_ALU_UOF_out, EX_MEM_ALU_Equal_out, EX_MEM_RD2_out, EX_MEM_WriteReg_out, EX_MEM_Enable_out);
-         //译码阶段、执行阶段、访存阶段的指令之间进行数据相关检测
-        wire [4:0]EX_Write_Reg, MEM_Write_Reg;
-        wire EX_Reg_Write, MEM_Reg_Write;
-        assign EX_Write_Reg = ID_EX_WriteReg_out;
-        assign EX_Reg_Write = ID_EX_Regwrite_out;
-        wire Load_use;   //一旦发生load_use数据相关，则关闭PC_register和IF_ID使能端，并对ID_EX清零
-        Reg_Conflict_Detection_Bypass detection(R1_used, R2_used, R1_in, R2_in, EX_Write_Reg, MEM_Write_Reg, EX_Reg_Write, MEM_Reg_Write, ID_EX_Memtoreg_out, EX_MEM_Memtoreg_out, conflict_A, conflict_B, Load_use);
-        
-        //访存MEM阶段
-        wire [31:0]mem;
-        RAM RAM1(EX_MEM_ALU_Result1_out[11:0], EX_MEM_RD2_out, EX_MEM_Mode_out, EX_MEM_Memwrite_out, 1, clk, clr, 1, mem);
-        wire [3:0]MEM_WB_ALU_OP_out;
-        wire [1:0]MEM_WB_Mode_out;
-        wire [31:0]MEM_WB_Order_out, MEM_WB_PC_plus_4_out, MEM_WB_ALU_Result1_out, MEM_WB_ALU_Result2_out, MEM_WB_mem_out;
-        wire [4:0]MEM_WB_WriteReg_out;
-        wire MEM_WB_Memtoreg_out, MEM_WB_Memwrite_out, MEM_WB_Alu_src_out, MEM_WB_Regwrite_out, MEM_WB_Syscall_out, MEM_WB_Signedext_out, MEM_WB_Regdst_out, MEM_WB_Beq_out, MEM_WB_Bne_out, MEM_WB_Jr_out, MEM_WB_Jmp_out, MEM_WB_Jal_out, MEM_WB_Shift_out, MEM_WB_Lui_out, MEM_WB_Blez_out, MEM_WB_Bgtz_out, MEM_WB_Bz_out, MEM_WB_Byte_out, MEM_WB_Signext2_out, MEM_WB_R1_used_out, MEM_WB_R2_used_out,
-            MEM_WB_ALU_OF_out, MEM_WB_ALU_UOF_out, MEM_WB_ALU_Equal_out, MEM_WB_Enable_out;
-        MEM_WB pipeline4(EX_MEM_ALU_OP_out, EX_MEM_Memtoreg_out, EX_MEM_Memwrite_out, EX_MEM_Alu_src_out, EX_MEM_Regwrite_out, EX_MEM_Syscall_out, EX_MEM_Signedext_out, EX_MEM_Regdst_out, EX_MEM_Beq_out, EX_MEM_Bne_out, EX_MEM_Jr_out, EX_MEM_Jmp_out, EX_MEM_Jal_out, EX_MEM_Shift_out, EX_MEM_Lui_out, EX_MEM_Blez_out, EX_MEM_Bgtz_out, EX_MEM_Bz_out, EX_MEM_Mode_out, EX_MEM_Byte_out, EX_MEM_Signext2_out, EX_MEM_R1_used_out, EX_MEM_R2_used_out,
-                EX_MEM_Order_out, EX_MEM_PC_plus_4_out, EX_MEM_ALU_Result1_out, EX_MEM_ALU_Result2_out, EX_MEM_ALU_OF_out, EX_MEM_ALU_UOF_out, EX_MEM_ALU_Equal_out, mem, EX_MEM_WriteReg_out, clk, clr, 1,  //输入信号
-                MEM_WB_ALU_OP_out, MEM_WB_Memtoreg_out, MEM_WB_Memwrite_out, MEM_WB_Alu_src_out, MEM_WB_Regwrite_out, MEM_WB_Syscall_out, MEM_WB_Signedext_out, MEM_WB_Regdst_out, MEM_WB_Beq_out, MEM_WB_Bne_out, MEM_WB_Jr_out, MEM_WB_Jmp_out, MEM_WB_Jal_out, MEM_WB_Shift_out, MEM_WB_Lui_out, MEM_WB_Blez_out, MEM_WB_Bgtz_out, MEM_WB_Bz_out, MEM_WB_Mode_out, MEM_WB_Byte_out, MEM_WB_Signext2_out, MEM_WB_R1_used_out, MEM_WB_R2_used_out,
-                MEM_WB_Order_out, MEM_WB_PC_plus_4_out, MEM_WB_ALU_Result1_out, MEM_WB_ALU_Result2_out, MEM_WB_ALU_OF_out, MEM_WB_ALU_UOF_out, MEM_WB_ALU_Equal_out, MEM_WB_mem_out, MEM_WB_WriteReg_out, MEM_WB_Enable_out);
-        assign MEM_Write_Reg = EX_MEM_WriteReg_out;
-        assign MEM_Reg_Write = EX_MEM_Regwrite_out;
-        
-         //ID_EX_RD1_out, ID_EX_RD2_out重定向
-        Mux_2 #(32) mux_get_ID_EX_RD1_out(ID_EX_RD1_out_temp, EX_MEM_ALU_Result1_out, MEM_WB_mem_out, MEM_WB_ALU_Result1_out, EX_conflict_A, ID_EX_RD1_out);
-        Mux_2 #(32) mux_get_ID_EX_RD2_out(ID_EX_RD2_out_temp, EX_MEM_ALU_Result1_out, MEM_WB_mem_out, MEM_WB_ALU_Result1_out, EX_conflict_B, ID_EX_RD2_out);
+    
+    wire [31:0]IF_nextPC, EX_A, IF_PC_out, IF_PC_plus_4, IF_Order;
+    wire ID_EX_Syscall_out, ID_Load_use;
+    IF cpu_if(.PC_in(IF_nextPC), .PC_enable(((EX_A==32'h00000022) | (~ID_EX_Syscall_out) | Go) & (~ID_Load_use)),
+        .clk(clk), .rst(rst), //输入信号
+        .PC_plus_4(IF_PC_plus_4), .Order(IF_Order));
+    
+    wire Syscall_to_Stop;
+    assign Syscall_to_Stop = ID_EX_Syscall_out & ~(EX_A == 34) & (~Go);
+    
+    wire EX_branch, ID_EX_jmp_out;
+    wire [31:0]IF_ID_Order_out, IF_ID_PC_plus_4_out;
+    IF_ID pipeline1(.clk(clk), .rst(rst | EX_branch | ID_EX_jmp_out), .enable((~(Syscall_to_Stop | ID_Load_use))), 
+        .Order_in(IF_Order),.PC_plus_4_in(IF_PC_plus_4),    //输入信号
+        .PC_plus_4_out(IF_ID_PC_plus_4_out), .Order_out(IF_ID_Order_out));
+    
+    wire [31:0]WB_RegFile_Din, ID_R1_out, ID_R2_out, ID_imm;
+    wire [4:0]MEM_WB_Write_Reg_num_out, ID_EX_Write_Reg_num_out, EX_MEM_Write_Reg_num_out, ID_Write_Reg_num;
+    wire [3:0]ID_ALU_OP;
+    wire [1:0]ID_conflict_sel_A, ID_conflict_sel_B, ID_Mode;
+    wire MEM_WB_Reg_Write_enable_out, ID_EX_Reg_Write_enable_out, EX_MEM_Reg_Write_enable_out, ID_Shift, ID_lui, ID_Bne,
+        ID_Beq, ID_Blez, ID_Bgtz, ID_Bz, ID_jmp, ID_Jr, ID_Syscall, ID_Memwrite, ID_Memread, ID_Byte, ID_Signext2,
+        ID_Jal, ID_Reg_Write_enable, ID_R1_used, ID_R2_used, ID_EX_Memread_out, EX_MEM_Memread_out, ID_HI_LO_Write_enable,
+        ID_HI_Write_to_GPR, ID_LO_Write_to_GPR, ID_EX_HI_Write_to_GPR_out, ID_EX_LO_Write_to_GPR_out;
+    ID cpu_id(.Order(IF_ID_Order_out), .Din(WB_RegFile_Din), .W_in(MEM_WB_Write_Reg_num_out),
+        .EX_Write_Reg_num(ID_EX_Write_Reg_num_out), .MEM_Write_Reg_num(EX_MEM_Write_Reg_num_out),
+        .Reg_Write_enable(MEM_WB_Reg_Write_enable_out), .clk(clk), .EX_Reg_Write_enable(ID_EX_Reg_Write_enable_out),
+        .MEM_Reg_Write_enable(EX_MEM_Reg_Write_enable_out),  .EX_Memread(ID_EX_Memread_out), .MEM_Memread(EX_MEM_Memread_out),
+        .EX_HI_Write_to_GPR(ID_EX_HI_Write_to_GPR_out), .EX_LO_Write_to_GPR(ID_EX_LO_Write_to_GPR_out),//输入信号
+        .R1_out(ID_R1_out), .ID_R2_out(ID_R2_out), .imm(ID_imm), .Write_Reg_num(ID_Write_Reg_num), .conflict_sel_A(ID_conflict_sel_A),
+        .conflict_sel_B(ID_conflict_sel_B), .load_use(ID_Load_use), .Shift(ID_Shift), .Lui(ID_lui), .Bne(ID_Bne), 
+        .Beq(ID_Beq), .Blez(ID_Blez), .Bgtz(ID_Bgtz), .Bz(ID_Bz), .Jmp(ID_jmp), .Jr(ID_Jr), .Syscall(ID_Syscall), 
+        .ALU_OP(ID_ALU_OP), .Mode(ID_Mode), .Memwrite(ID_Memwrite), .Memread(ID_Memread), .Byte(ID_Byte), .Signext2(ID_Signext2),
+        .Jal(ID_Jal), .R1_used(ID_R1_used), .R2_used(ID_R2_used), .Regwrite(ID_Reg_Write_enable), .HI_LO_Write_enable(ID_HI_LO_Write_enable),
+        .HI_Write_to_GPR(ID_HI_Write_to_GPR), .LO_Write_to_GPR(ID_LO_Write_to_GPR));
 
-        //写回WB阶段
-        Data_to_Din Din1 (MEM_WB_Byte_out, MEM_WB_Signext2_out, MEM_WB_mem_out, MEM_WB_ALU_Result1_out, MEM_WB_PC_plus_4_out, MEM_WB_Jal_out, MEM_WB_Memtoreg_out, Din);
-        assign RegFile_Regwrite = MEM_WB_Regwrite_out;
-        assign W_in = MEM_WB_WriteReg_out;
-         
-        //PC_enable
-        wire PC_enable_temp;
-        PCenable PC_enable1 (ID_EX_RD1_out, ID_EX_Syscall_out, Go, clk, PC_enable_temp);
-        assign PC_enable = PC_enable_temp & (~Load_use);
+    wire ID_EX_Shift_out, ID_EX_Lui_out, ID_EX_Bne_out, ID_EX_Beq_out, ID_EX_Blez_out, ID_EX_Bgtz_out, ID_EX_Bz_out,
+        ID_EX_Jr_out, ID_EX_Memwrite_out, ID_EX_Byte_out, ID_EX_Signext2_out, ID_EX_Jal_out, ID_EX_HI_LO_Write_enable_out;
+    wire [31:0]ID_EX_Order_out, ID_EX_RD1_out, ID_EX_RD2_out, ID_EX_imm_out, ID_EX_PC_plus_4_out;
+    wire [3:0]ID_EX_ALU_OP_out;
+    wire [1:0]ID_EX_Mode_out, ID_EX_conflict_sel_A_out, ID_EX_conflict_sel_B_out;
+    ID_EX pipeline2(.clk(clk), .rst(rst | EX_branch | ID_EX_jmp_out | ID_Load_use), .enable((~(EX_branch | ID_EX_jmp_out | Syscall_to_Stop))),
+        .Order_in(IF_ID_Order_out), .RD1_in(ID_R1_out), .RD2_in(ID_R2_out), .Shift_in(ID_Shift), .Lui_in(ID_lui), 
+        .imm_in(ID_imm), .Bne_in(ID_Bne), .Beq_in(ID_Beq), .Blez_in(ID_Blez), 
+        .Bgtz_in(ID_Bgtz), .Bz_in(ID_Bz), .Jmp_in(ID_jmp), .Jr_in(ID_Jr),
+        .ALU_OP_in(ID_ALU_OP), .Sel_A_in(ID_conflict_sel_A), .Sel_B_in(ID_conflict_sel_B),
+        .PC_plus_4_in(IF_ID_PC_plus_4_out), .Mode_in(ID_Mode), .Memwrite_in(ID_Memwrite),
+        .Memread_in(ID_Memread), .Byte_in(ID_Byte), .Signext2_in(ID_Signext2), 
+        .Jal_in(ID_Jal), .Write_Reg_num_in(ID_Write_Reg_num), .Reg_Write_enable_in(ID_Reg_Write_enable), .Syscall_in(ID_Syscall),
+        .HI_LO_Write_enable_in(ID_HI_LO_Write_enable), .HI_Write_to_GPR_in(ID_HI_Write_to_GPR), .LO_Write_to_GPR_in(ID_LO_Write_to_GPR),//输入信号
         
-        //ext18
-        wire [15:0]temp;
-        wire [31:0]ext18;
-        assign temp = ID_EX_imm[15]?16'hFFFF:16'h0;
-        assign ext18 = {temp, ID_EX_imm[15:0]}<<2;
-        //branch
-        wire branch;
-        Branch branch1 (ID_EX_Bne_out, ID_EX_Beq_out, ID_EX_Blez_out, ID_EX_Bgtz_out, ID_EX_Bz_out, Equal, ID_EX_Order_out[16], ID_EX_RD1_out, branch);
-        //分支指令成功时使IF_ID和ID_EX关闭使能端（消除IF和ID阶段的无效指令），产生气泡
-        assign IF_ID_clr = clr | branch | ID_EX_Jmp_out;
-        assign IF_ID_Enable = ~(Syscall_to_Stop | Load_use);
-        assign ID_EX_clr = clr | branch | ID_EX_Jmp_out | Load_use;
-        assign ID_EX_Enable = (~(branch | ID_EX_Jmp_out)) & (~Syscall_to_Stop);
-        
-        //PC_data
-        PC_data PC_data1 (PC_plus_4, ext18, ID_EX_Order_out[25:0], branch, ID_EX_Jmp_out, ID_EX_Jr_out, ID_EX_RD1_out, ID_EX_PC_plus_4_out, PC_in);
+        .Order_out(ID_EX_Order_out), .RD1_out(ID_EX_RD1_out), .RD2_out(ID_EX_RD2_out), .Shift_out(ID_EX_Shift_out), .Lui_out(ID_EX_Lui_out), 
+        .imm_out(ID_EX_imm_out), .Bne_out(ID_EX_Bne_out), .Beq_out(ID_EX_Beq_out), .Blez_out(ID_EX_Blez_out), 
+        .Bgtz_out(ID_EX_Bgtz_out), .Bz_out(ID_EX_Bz_out), .Jmp_out(ID_EX_jmp_out), .Jr_out(ID_EX_Jr_out),
+        .ALU_OP_out(ID_EX_ALU_OP_out), .Sel_A_out(ID_EX_conflict_sel_A_out), .Sel_B_out(ID_EX_conflict_sel_B_out),
+        .PC_plus_4_out(ID_EX_PC_plus_4_out), .Mode_out(ID_EX_Mode_out), .Memwrite_out(ID_EX_Memwrite_out),
+         .Memread_out(ID_EX_Memread_out), .Byte_out(ID_EX_Byte_out), .Signext2_out(ID_EX_Signext2_out), 
+         .Jal_out(ID_EX_Jal_out), .Write_Reg_num_out(ID_EX_Write_Reg_num_out), .Reg_Write_enable_out(ID_EX_Reg_Write_enable_out), 
+         .Syscall_out(ID_EX_Syscall_out), .HI_LO_Write_enable_out(ID_EX_HI_LO_Write_enable_out),
+         .HI_Write_to_GPR_out(ID_EX_HI_Write_to_GPR_out), .LO_Write_to_GPR_out(ID_EX_LO_Write_to_GPR_out));
+    
+    wire [31:0]EX_B, EX_ALU_result, EX_ALU_result2, EX_MEM_ALU_result_out;
+    EX cpu_ex(.Order(ID_EX_Order_out), .RD1(ID_EX_RD1_out), .RD2(ID_EX_RD2_out), .MEM_ALU_result(EX_MEM_ALU_result_out), 
+        .WB_RegFile_Din(WB_RegFile_Din), .Shift(ID_EX_Shift_out), .Lui(ID_EX_Lui_out), 
+        .Bne(ID_EX_Bne_out), .Beq(ID_EX_Beq_out), .Blez(ID_EX_Blez_out), .Bgtz(ID_EX_Bgtz_out), 
+        .Bz(ID_EX_Bz_out), .Jmp(ID_EX_jmp_out), .Jr(ID_EX_Jr_out),
+        .ALU_OP(ID_EX_ALU_OP_out), .Sel_A(ID_EX_conflict_sel_A_out), .Sel_B(ID_EX_conflict_sel_B_out), 
+        .IF_PC_plus_4(IF_PC_plus_4), .PC_plus_4(ID_EX_PC_plus_4_out), .imm(ID_EX_imm_out),  //输入信号
+        .IF_nextPC(IF_nextPC), .A(EX_A), .B(EX_B), .Result1(EX_ALU_result), .Result2(EX_ALU_result2), .branch(EX_branch));
 
-        //shamt
-        shamt_input shamt1 (ID_EX_Order_out, ID_EX_RD1_out, ID_EX_Shift_out, ID_EX_Lui_out, shamt);
+    wire EX_MEM_Jal_out, EX_MEM_Signext2_out, EX_MEM_Byte_out, EX_MEM_Memwrite_out, EX_MEM_HI_LO_Write_enable_out,
+        EX_MEM_HI_Write_to_GPR_out, EX_MEM_LO_Write_to_GPR_out;
+    wire [1:0]EX_MEM_Mode_out;
+    wire [31:0]EX_MEM_PC_plus_4_out, EX_MEM_B_out, EX_MEM_Order_out, EX_MEM_ALU_result2_out;
+    EX_MEM pipeline3(.clk(clk), .rst(rst), .enable(1'b1), .Order_in(ID_EX_Order_out), .ALU_result_in(EX_ALU_result), .B_in(EX_B),
+        .PC_plus_4_in(ID_EX_PC_plus_4_out), .Mode_in(ID_EX_Mode_out), .Memwrite_in(ID_EX_Memwrite_out), .Memread_in(ID_EX_Memread_out),
+        .Byte_in(ID_EX_Byte_out), .Signext2_in(ID_EX_Signext2_out), .Jal_in(ID_EX_Jal_out), 
+        .Write_Reg_num_in(ID_EX_Write_Reg_num_out), .Reg_Write_enable_in(ID_EX_Reg_Write_enable_out),
+        .HI_LO_Write_enable_in(ID_EX_HI_LO_Write_enable_out), .ALU_result2_in(EX_ALU_result2),
+        .HI_Write_to_GPR_in(ID_EX_HI_Write_to_GPR_out), .LO_Write_to_GPR_in(ID_EX_LO_Write_to_GPR_out),  //输入信号
+        .Order_out(EX_MEM_Order_out), .ALU_result_out(EX_MEM_ALU_result_out), .B_out(EX_MEM_B_out), .PC_plus_4_out(EX_MEM_PC_plus_4_out),
+        .Mode_out(EX_MEM_Mode_out), .Memwrite_out(EX_MEM_Memwrite_out), .Memread_out(EX_MEM_Memread_out), .Byte_out(EX_MEM_Byte_out), 
+        .Signext2_out(EX_MEM_Signext2_out), .Jal_out(EX_MEM_Jal_out), .Write_Reg_num_out(EX_MEM_Write_Reg_num_out), 
+        .Reg_Write_enable_out(EX_MEM_Reg_Write_enable_out), .HI_LO_Write_enable_out(EX_MEM_HI_LO_Write_enable_out),
+        .ALU_result2_out(EX_MEM_ALU_result2_out), .HI_Write_to_GPR_out(EX_MEM_HI_Write_to_GPR_out), .LO_Write_to_GPR_out(EX_MEM_LO_Write_to_GPR_out));
 
-        //ID_to_reg
-        Path_ROM_to_Reg path1(IF_ID_Order_out, Jal, Regdst, Syscall, R1_in, R2_in, WriteReg);
-        
-        //aluA, aluB
-        assign ALU_A = ID_EX_RD1_out;
-        Mux_1 #(32) mux_alu_ALU_B (ID_EX_RD2_out, ID_EX_imm, ID_EX_Alu_src_out, ALU_B);
+    wire [31:0]MEM_RegFile_Din;
+    MEM cpu_mem(.clk(clk), .rst(rst), .Din(EX_MEM_B_out), .Order(EX_MEM_Order_out), .ALU_result(EX_MEM_ALU_result_out), 
+        .PC_plus_4(EX_MEM_PC_plus_4_out), .Mode(EX_MEM_Mode_out), .Write_enable(EX_MEM_Memwrite_out), 
+        .Sel(1'b1), .Read_enable(EX_MEM_Memread_out), .Byte(EX_MEM_Byte_out), .Signext2(EX_MEM_Signext2_out), 
+        .Jal(EX_MEM_Jal_out),   //输入信号
+        .RegFile_Din(MEM_RegFile_Din));
+    
+    wire [31:0]MEM_WB_Order_out, MEM_WB_ALU_result2_out, MEM_WB_RegFile_Din_out;
+    wire MEM_WB_HI_LO_Write_enable_out, MEM_WB_HI_Write_to_GPR_out, MEM_WB_LO_Write_to_GPR_out;
+    MEM_WB pipeline4(.clk(clk), .rst(rst), .enable(1'b1), .Order_in(EX_MEM_Order_out), .RegFile_Din_in(MEM_RegFile_Din),
+        .Write_Reg_num_in(EX_MEM_Write_Reg_num_out), .Reg_Write_enable_in(EX_MEM_Reg_Write_enable_out),
+        .HI_LO_Write_enable_in(EX_MEM_HI_LO_Write_enable_out), .ALU_result2_in(EX_MEM_ALU_result2_out),
+        .HI_Write_to_GPR_in(EX_MEM_HI_Write_to_GPR_out), .LO_Write_to_GPR_in(EX_MEM_LO_Write_to_GPR_out),     //输入信号
+        .Order_out(MEM_WB_Order_out), .RegFile_Din_out(MEM_WB_RegFile_Din_out), .Write_Reg_num_out(MEM_WB_Write_Reg_num_out), 
+        .Reg_Write_enable_out(MEM_WB_Reg_Write_enable_out), .HI_LO_Write_enable_out(MEM_WB_HI_LO_Write_enable_out),
+        .ALU_result2_out(MEM_WB_ALU_result2_out), .HI_Write_to_GPR_out(MEM_WB_HI_Write_to_GPR_out), .LO_Write_to_GPR_out(MEM_WB_LO_Write_to_GPR_out));
+    
+    wire [31:0]WB_HI_out, WB_LO_out;
+    WB cpu_wb(.clk(clk), .rst(rst), .Order(MEM_WB_Order_out), .RegFile_Din(MEM_WB_RegFile_Din_out), .Write_Reg_num(MEM_WB_Write_Reg_num_out), 
+        .Reg_Write_enable(MEM_WB_Reg_Write_enable_out), .HI_LO_Write_enable(MEM_WB_HI_LO_Write_enable_out), 
+        .HI_in(MEM_WB_ALU_result2_out), .HI_Write_to_GPR(MEM_WB_HI_Write_to_GPR_out), .LO_Write_to_GPR(MEM_WB_LO_Write_to_GPR_out),   //输入信号
+        .RegFile_Din_out(WB_RegFile_Din));
+    
+    //count EX阶段
+    wire pipe, redirect;
+    assign pipe = (ID_EX_Order_out==0)?1:0;
+    assign redirect = ~(ID_EX_conflict_sel_A_out==0 | ID_EX_conflict_sel_B_out==0);
+    Counter_circle counter_circle1(clk, rst, EX_branch, ID_EX_jmp_out, ID_EX_Syscall_out, pipe, ID_Load_use, redirect,
+            EX_A, Count_all, Count_branch, Count_jmp, Count_pipe, Count_load_use, Count_redirect);
 
-        //count EX阶段
-        wire pipe, redirect;
-        assign pipe = (ID_EX_Order_out==0)?1:0;
-        assign redirect = ~(EX_conflict_A==0 | EX_conflict_B==0);
-        Counter_circle counter_circle1(clk, clr, branch, ID_EX_Jmp_out, ID_EX_Syscall_out, pipe, Load_use, redirect,
-                ID_EX_RD1_out, Count_all, Count_branch, Count_jmp, Count_pipe, Count_load_use, Count_redirect);
-
-        //LedData EX阶段
-        LedData led1(ID_EX_Syscall_out, ID_EX_RD1_out, ID_EX_RD2_out, clk, clr, Leddata);
-
+    //LedData EX阶段
+    LedData led1(ID_EX_Syscall_out, EX_A, EX_B, clk, rst, Leddata);
 endmodule

@@ -32,14 +32,19 @@ module top_of_all(clr,Go,clk,choose_data_show,choose_Hz,clk_N,SEG,AN);
 	wire [31:0] Leddata,Count_all,Count_branch,Count_jmp,Count_pipe, Count_load_use, Count_redirect;
 	wire [31:0] Leddata_show;
 
-	
+	// initial begin
+	// 	Leddata_show = 32'h0000_0000;
+	// end
 
 	assign Leddata_show = choose_data_show == 3'b000 ? Leddata :
 							choose_data_show == 3'b001 ? Count_all :
-							choose_data_show == 3'b010 ? Count_branch :
-							choose_data_show == 3'b011 ? Count_jmp :
-							choose_data_show == 3'b100 ? Count_load_use :
-							Count_redirect;
+							choose_data_show == 3'b010 ? Count_jmp :
+							choose_data_show == 3'b011
+							? Count_branch :
+							choose_data_show == 3'b100
+							? Count_pipe :
+							choose_data_show == 3'b101
+							? Count_load_use : Count_redirect; //choose_data_show == 2'b11
 	// always @(choose_data_show or Leddata or Count_all or Count_branch) begin
 	// 	case(choose_data_show)
 	// 		0:Leddata_show = Leddata;
@@ -52,7 +57,7 @@ module top_of_all(clr,Go,clk,choose_data_show,choose_Hz,clk_N,SEG,AN);
 	// end
 	
 	show show(clk,Leddata_show,SEG,AN);	
-	Redirect_Pipeline_CPU CPU(clr,Go,clk_N,Leddata,Count_all,Count_branch,Count_jmp,Count_pipe, Count_load_use, Count_redirect);
+	Redirect_Pipeline_CPU MIPS_CPU(clr,Go,clk_N,Leddata,Count_all,Count_branch,Count_jmp,Count_pipe, Count_load_use, Count_redirect);
 	divider_dif divider_dif(clk,choose_Hz,clk_N);
 
 endmodule
@@ -76,10 +81,10 @@ module divider_dif(clk, choose_Hz,clk_N);
 	
 	always @(choose_Hz) begin
 		case(choose_Hz)
-			2'b00: N = 10_000;
-			2'b01: N = 100_000;
-			2'b10: N = 1_000_000;
-			2'b11: N = 10_000_000;
+			2'b00: N = 10;
+			2'b01: N = 100;
+			2'b10: N = 1000;
+			2'b11: N = 10_000;
 		endcase
 	end
 	
