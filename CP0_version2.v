@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module CP0(R_in,W_in,Din,EPC_in,WE,EPC_WE,sel,clk,clr,NMI_one,NMI_zero,IE_one,IE_zero,R_out,EPC_out);
+module CP0(R_in,W_in,Din,WE,sel,clk,clr,NMI_one,NMI_zero,IE_one,IE_zero,NMI_out,IE_out,R_out);
 	parameter WIDTH = 32;
 	input [4:0] R_in;
 	input [4:0] W_in;
