@@ -21,7 +21,7 @@
 
 
 module CP0(R_in,W_in,Din,WE,sel,clk,clr,NMI_one,NMI_zero,IE_one,IE_zero, IntRequest, EPC_in,  
-				NMI_out,IE_out,R_out);
+				NMI_out,IE_out,R_out, EPC_out);
 	parameter WIDTH = 32;
 	input [4:0] R_in;
 	input [4:0] W_in;
@@ -31,12 +31,13 @@ module CP0(R_in,W_in,Din,WE,sel,clk,clr,NMI_one,NMI_zero,IE_one,IE_zero, IntRequ
 	input [2:0] sel;
 	output wire NMI_out,IE_out;
 	output reg [WIDTH-1:0] R_out;
+	output [WIDTH-1:0]EPC_out;
 
 	reg [WIDTH-1:0] cause,status,EPC;
 
 	initial begin
 		cause = 0;
-		status = 0;
+		status = 32'b1111_1111_1111_1011_1111_1111_1111_1111;
 		EPC = 0;
 	end
 
@@ -91,6 +92,9 @@ module CP0(R_in,W_in,Din,WE,sel,clk,clr,NMI_one,NMI_zero,IE_one,IE_zero, IntRequ
 			else if(IE_zero == 1)begin
 				status = status & 32'b1111_1111_1111_1111_1111_1111_1111_1110;
 			end
+			// else begin
+			// 	status = status & 32'b1111_1111_1111_1111_1111_1111_1111_1110;
+			// end
 		end
 //		else begin
 //			EPC = EPC;
@@ -114,4 +118,6 @@ module CP0(R_in,W_in,Din,WE,sel,clk,clr,NMI_one,NMI_zero,IE_one,IE_zero, IntRequ
 			end
 		endcase
 	end
+
+	assign EPC_out = EPC;
 endmodule

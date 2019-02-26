@@ -120,7 +120,8 @@ module D_Flip_Flop(clk, clr, Din, Q);
 	end
 endmodule
 
-module InterruptSheild(clk, IR0, IR1, IR2, IR3, INM0, INM1, INM2, INM3, IntEnable, Circular_ERET_In, IntNum, IntRequest);
+module InterruptSheild(clk, IR0, IR1, IR2, IR3, INM0, INM1, INM2, INM3, IntEnable, Circular_ERET_In,
+						 IntNum, IntRequest);
 	input clk, IR0, IR1, IR2, IR3, INM0, INM1, INM2, INM3, IntEnable, Circular_ERET_In;
 	output [1:0]IntNum;
 	output IntRequest;
