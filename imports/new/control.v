@@ -98,7 +98,7 @@ module control(
         Alu_src = ADDI | ANDI | ADDIU | SLTI | ORI | LW | SW | XORI | LUI | SLTIU | LB | LH | LBU | LHU | SB | SH ; //
         Regwrite = R_type | JAL | ADDI | ANDI | ADDIU | SLTI | ORI | LW | XORI | LUI | SLTIU | LB | LH | LBU | LHU | MFLO | MFHI | MFC0;
         Syscall = SYSCALL;
-        Signedext = ADDI | ADDIU | SLTI | LW | SW | LB | LH | LBU | LHU | SB | SH ;//
+        Signedext = ADDI | ADDIU | SLTI | LW | SW | LB | LH | LBU | LHU | SB | SH | BNE | BEQ | BLEZ |BLTZ | BGTZ |BGEZ;//
         Regdst = R_type;
         Beq = BEQ;
         Bne = BNE;

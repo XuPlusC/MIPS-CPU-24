@@ -20,13 +20,14 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module CP0(R_in,W_in,Din,WE,sel,clk,clr,NMI_one,NMI_zero,IE_one,IE_zero,NMI_out,IE_out,R_out);
+module CP0(R_in,W_in,Din,WE,sel,clk,clr,NMI_one,NMI_zero,IE_one,IE_zero, IntRequest, EPC_in,  
+				NMI_out,IE_out,R_out);
 	parameter WIDTH = 32;
 	input [4:0] R_in;
 	input [4:0] W_in;
-	input [WIDTH-1:0] Din;
+	input [WIDTH-1:0] Din, EPC_in;
 	input WE,clk,clr;
-	input NMI_one,NMI_zero,IE_one,IE_zero;
+	input NMI_one,NMI_zero,IE_one,IE_zero, IntRequest;
 	input [2:0] sel;
 	output wire NMI_out,IE_out;
 	output reg [WIDTH-1:0] R_out;
@@ -54,10 +55,13 @@ module CP0(R_in,W_in,Din,WE,sel,clk,clr,NMI_one,NMI_zero,IE_one,IE_zero,NMI_out,
 		end
 	end
 
-	always @(posedge clk) begin
+	always @(posedge clk or posedge IntRequest) begin
 	//write EPC
 		if(clr == 1) begin
 			EPC = 0;
+		end
+		else if(IntRequest == 1) begin
+			EPC = EPC_in;
 		end
 		else if(WE && W_in == 14)begin
 			EPC = Din;
