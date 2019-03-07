@@ -1,11 +1,11 @@
 /*
-**  ä½œè€…ï¼šé©¬ç¿”
-**  ä¿®æ”¹ï¼šå¼ é‘«
-**  åŠŸèƒ½ï¼šjumpã€branchæŒ‡ä»¤è·³è½¬åˆ¤æ–­
-**  åŸåˆ›
+**  ×÷Õß£ºÂíÏè
+**  ĞŞ¸Ä£ºÕÅöÎ
+**  ¹¦ÄÜ£ºjump¡¢branchÖ¸ÁîÌø×ªÅĞ¶Ï
+**  Ô­´´
 */
 
-//bæŒ‡ä»¤éœ€è¦åŠ 4ï¼Œè€ŒjæŒ‡ä»¤ä¸éœ€è¦
+//bÖ¸ÁîĞèÒª¼Ó4£¬¶øjÖ¸Áî²»ĞèÒª
 
 `define BRANCH_BEQ 		32'd1
 `define BRANCH_BNE 		32'd2
@@ -19,16 +19,16 @@
 `define JALR_JR 		32'd512
 
 module Branch_Jump_ID(
-	input wire [9:0]			bj_type_ID, //10ç§è·³è½¬æŒ‡ä»¤ï¼Œä¸€ä½ä»£è¡¨ä¸€ç§ï¼Œå…·ä½“è§æ§åˆ¶å™¨ã€‚ ä¸ºäº†èŠ‚çœä½æ•°çš„è¯ï¼Œå°†10ç§é€‰æ‹©åšæˆ4ä½çš„é€‰æ‹©ä¿¡å·æ›´å¥½
-    input wire [31:0]			num_a_ID,  	//é€šç”¨å¯„å­˜å™¨1çš„å€¼
-    input wire [31:0]			num_b_ID,  	//é€šç”¨å¯„å­˜å™¨2çš„å€¼
-    input wire [15:0]			imm_b_ID,  	//16ä½ç«‹å³æ•°
-    input wire [25:0]			imm_j_ID,  	//26ä½ç«‹å³æ•°
-    input wire [31:0]			JR_addr_ID, //é€šç”¨å¯„å­˜å™¨çš„å€¼ï¼ŒJRæŒ‡ä»¤çš„ç›®æ ‡åœ°å€ï¼Œå®é™…ä¸Šä¸num_a_IDæ˜¯åŒä¸€ä¸ªå€¼
-    input wire [31:0]			PC_ID,     	//IDæ®µçš„PC
+	input wire [9:0]			bj_type_ID, //10ÖÖÌø×ªÖ¸Áî£¬Ò»Î»´ú±íÒ»ÖÖ£¬¾ßÌå¼û¿ØÖÆÆ÷¡£ ÎªÁË½ÚÊ¡Î»ÊıµÄ»°£¬½«10ÖÖÑ¡Ôñ×ö³É4Î»µÄÑ¡ÔñĞÅºÅ¸üºÃ
+    input wire [31:0]			num_a_ID,  	//Í¨ÓÃ¼Ä´æÆ÷1µÄÖµ
+    input wire [31:0]			num_b_ID,  	//Í¨ÓÃ¼Ä´æÆ÷2µÄÖµ
+    input wire [15:0]			imm_b_ID,  	//16Î»Á¢¼´Êı
+    input wire [25:0]			imm_j_ID,  	//26Î»Á¢¼´Êı
+    input wire [31:0]			JR_addr_ID, //Í¨ÓÃ¼Ä´æÆ÷µÄÖµ£¬JRÖ¸ÁîµÄÄ¿±êµØÖ·£¬Êµ¼ÊÉÏÓënum_a_IDÊÇÍ¬Ò»¸öÖµ
+    input wire [31:0]			PC_ID,     	//ID¶ÎµÄPC
     
-	output reg 					Branch_Jump,//æ˜¯å¦è·³è½¬ï¼Œé€åˆ°PCæ¨¡å—
-    output reg [31:0]			BJ_address	//branå’Œjumpçš„ç›®æ ‡åœ°å€
+	output reg 					Branch_Jump,//ÊÇ·ñÌø×ª£¬ËÍµ½PCÄ£¿é
+    output reg [31:0]			BJ_address	//branºÍjumpµÄÄ¿±êµØÖ·
 );
     
 
@@ -36,9 +36,9 @@ module Branch_Jump_ID(
     wire [31:0]imm_b_ID_32;
     assign sign = imm_b_ID[15];
     assign imm_b_ID_32 = { sign,sign,sign,sign,sign,sign,sign,sign,
-                           sign,sign,sign,sign,sign,sign,sign,sign, imm_b_ID }; //ç¬¦å·æ‰©å±•
+                           sign,sign,sign,sign,sign,sign,sign,sign, imm_b_ID }; //·ûºÅÀ©Õ¹
 
-    //ç”Ÿæˆç›®æ ‡åœ°å€
+    //Éú³ÉÄ¿±êµØÖ·
     always@(*)begin
       case (bj_type_ID)
         `BRANCH_BEQ:begin

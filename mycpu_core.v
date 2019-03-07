@@ -1,21 +1,21 @@
 /*
-**	ä½œè€…ï¼šå¼ é‘«
-**	åŠŸèƒ½ï¼šæ•°æ®é€šè·¯
-**	åŸåˆ›
+**	×÷Õß£ºÕÅöÎ
+**	¹¦ÄÜ£ºÊı¾İÍ¨Â·
+**	Ô­´´
 */
 
-`define CONTROL_BUS_WIDTH 	33
+`define CONTROL_BUS_WIDTH 	35
 
 module mycpu_core(
-	// cpuæ—¶é’Ÿå’Œå¤ä½ä¿¡å·
+	// cpuÊ±ÖÓºÍ¸´Î»ĞÅºÅ
 	input wire 				aclk,
     input wire 				aresetn,
 	
-	// å¤–éƒ¨ç¡¬ä»¶ä¸­æ–­è¾“å…¥
+	// Íâ²¿Ó²¼şÖĞ¶ÏÊäÈë
 	input	[5:0]			interrupt,
 	
-	// AXI4æ€»çº¿
-	// è¯»åœ°å€é€šé“
+	// AXI4×ÜÏß
+	// ¶ÁµØÖ·Í¨µÀ
     output 	[3:0]			arid,
     output 	[31:0]			araddr,
     output 	[7:0]			arlen,
@@ -26,14 +26,14 @@ module mycpu_core(
     output 	[2:0]			arprot,
     output 					arvalid,
     input wire 				arready,
-	// è¯»æ•°æ®é€šé“
+	// ¶ÁÊı¾İÍ¨µÀ
     input 	[3:0]			rid,
     input 	[31:0]			rdata,
     input 	[1:0]			rresp,
     input 					rlast,
     input 					rvalid,
     output 					rready,
-	// å†™åœ°å€é€šé“
+	// Ğ´µØÖ·Í¨µÀ
     output 	[3:0]			awid,
     output 	[31:0]			awaddr,
     output 	[7:0]			awlen,
@@ -44,14 +44,14 @@ module mycpu_core(
     output 	[2:0]			awprot,
     output 					awvalid,
     input 					awready,
-	// å†™æ•°æ®é€šé“
+	// Ğ´Êı¾İÍ¨µÀ
     output 	[3:0]			wid,
     output 	[31:0]			wdata,
     output 	[3:0]			wstrb,
     output 					wlast,
     output 					wvalid,
     input 					wready,
-	// å†™å“åº”é€šé“
+	// Ğ´ÏìÓ¦Í¨µÀ
     input 	[3:0]			bid,
     input 	[1:0]			bresp,
     input 					bvalid,
@@ -140,7 +140,7 @@ module mycpu_core(
 	wire 	[4:0]			rd_ex;
 	wire 	[31:0]			alu_a_ex;
 	wire 	[31:0]			alu_b_ex;
-	wire 	[3:0]			aluop_ex;
+	wire 	[4:0]			aluop_ex;
 	wire 	[1:0]			add_sub_ex;
 	wire 	[31:0]			alu_r1_ex;
 	wire 	[31:0]			alu_r2_ex;
@@ -155,6 +155,7 @@ module mycpu_core(
 	wire 	[2:0]			din_sel_ex;
 	wire 	[2:0] 			load_store_ex;
 	wire 	[1:0]			hilo_mode_ex;
+	wire   [4:0]           lsb_ex;
 
 	//-----mem stage--
 	wire 	[`CONTROL_BUS_WIDTH:0]	control_mem;
@@ -258,7 +259,7 @@ module mycpu_core(
 	assign r1_r_id    		= control_id[19];
 	assign r2_r_id    		= control_id[20];
 
-	assign aluop_ex      	= control_ex[3:0];
+	assign aluop_ex      	= {control_ex[34], control_ex[3:0]};
 	assign alua_sel_ex   	= control_ex[16:15];
 	assign alub_sel_ex   	= control_ex[18:17];
 	assign load_ex       	= control_ex[21];
@@ -322,13 +323,13 @@ module mycpu_core(
 		.conflict_stall		(load_use)
     );
 
-    // æŒ‡ä»¤åœ°å€å˜æ¢
+    // Ö¸ÁîµØÖ·±ä»»
 	addr_map u_addr_map_pc(
 		.addr_in			(pc_if),
 		.addr_out			(physical_pc)
 	);
 
-    // æ•°æ®åœ°å€å˜æ¢
+    // Êı¾İµØÖ·±ä»»
 	addr_map u_addr_map_dm(
 		.addr_in			(alu_r1_mem),
 		.addr_out			(physical_dm_addr)
@@ -337,7 +338,7 @@ module mycpu_core(
 	
 	//------pipeline components------
 	//------------IF stage-----------
-	// cpu pc è®¡ç®—
+	// cpu pc ¼ÆËã
 	pc u_pc(
 		.clk				(aclk),
 		.resetn				(rst_pc),
@@ -516,6 +517,7 @@ module mycpu_core(
 	    .cp0_rw_reg_in		(rd_id),
 	    .illegal_pc_in     	(illegal_pc_id),
 	    .in_delayslot_in   	(in_delayslot_id),
+		.lsb_in 			(shamt_id),
 	
 		//ouput
 	    .control_signal_out	(control_ex),
@@ -531,7 +533,8 @@ module mycpu_core(
 	    .cp0_data_out		(cp0_data_ex),
 	    .cp0_rw_reg_out		(rd_ex),
 	    .illegal_pc_out    	(illegal_pc_ex),
-	    .in_delayslot_out  	(in_delayslot_ex)
+	    .in_delayslot_out  	(in_delayslot_ex),
+		.lsb_out			(lsb_ex)
 	);
 
 	//--------------EX stage---------
@@ -539,6 +542,8 @@ module mycpu_core(
 	    .X					(alu_a_ex),
 	    .Y					(alu_b_ex),
 	    .S					(aluop_ex),
+		.msb				(rd_ex),
+		.lsb 				(lsb_ex),
 	    .add_sub			(add_sub_ex),
 	    .rst     			(rst),
 	    .flush   			(is_exception_mem),

@@ -1,10 +1,10 @@
 /*
-**  浣滆�咃細椹繑
-**  鍔熻兘锛歁EM-WB娴佹按鎺ュ彛
-**  鍘熷垱
+**  作者：马翔
+**  功能：MEM-WB流水接口
+**  原创
 */
 
-`define CONTROL_BUS_WIDTH 33
+`define CONTROL_BUS_WIDTH 35
 
 module MEM_WB(
 	input 								clk,

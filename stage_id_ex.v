@@ -1,10 +1,10 @@
 /*
-**  浣滆�咃細椹繑
-**  鍔熻兘锛欼D-EX娴佹按鎺ュ彛
-**  鍘熷垱
+**  作者：马翔
+**  功能：ID-EX流水接口
+**  原创
 */
 
-`define CONTROL_BUS_WIDTH 33
+`define CONTROL_BUS_WIDTH 35
 
 module ID_EX(
 	input 								clk,
@@ -25,6 +25,7 @@ module ID_EX(
     input 		[4:0]					cp0_rw_reg_in,
     input 								illegal_pc_in,
     input 								in_delayslot_in,
+	input 		[4:0]					lsb_in,
 
     output reg 	[`CONTROL_BUS_WIDTH:0]	control_signal_out,
     output reg 	[4:0]					register1_out,
@@ -39,7 +40,8 @@ module ID_EX(
     output reg 	[31:0]					cp0_data_out,
     output reg 	[4:0]					cp0_rw_reg_out,
     output reg 							illegal_pc_out,
-    output reg 							in_delayslot_out
+    output reg 							in_delayslot_out,
+	output reg  [4:0]					lsb_out
 );
     
     always@(posedge clk)begin
@@ -58,6 +60,7 @@ module ID_EX(
 			cp0_rw_reg_out 		<= 'd0;
 			illegal_pc_out 		<= 1'b0;
 			in_delayslot_out 	<= 1'b0;
+			lsb_out				<= 5'b0;
 		end
 		else if (!stall) begin
 			control_signal_out 	<= control_signal_out;
@@ -74,6 +77,7 @@ module ID_EX(
 			cp0_rw_reg_out 		<= cp0_rw_reg_out;
 			illegal_pc_out 		<= illegal_pc_out;
 			in_delayslot_out 	<= in_delayslot_out;
+			lsb_out				<= lsb_out;
 		end
 		else begin
 			control_signal_out 	<= control_signal_in;
@@ -90,6 +94,7 @@ module ID_EX(
 			cp0_rw_reg_out 		<= cp0_rw_reg_in;
 			illegal_pc_out 		<= illegal_pc_in;
 			in_delayslot_out 	<= in_delayslot_in;
+			lsb_out				<= lsb_in;
 		end 
     end
 	

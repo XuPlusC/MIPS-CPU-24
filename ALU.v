@@ -1,11 +1,12 @@
 /*
-**	ä½œè€…ï¼šå¼ é‘«
-**	ä¿®æ”¹ï¼šé©¬ç¿”ã€æ—åŠ›éŸ¬
-**	åŠŸèƒ½ï¼šç®—æœ¯é€»è¾‘å•å…ƒ
-**	é™¤æ³•ä»¥å¤–çš„éƒ¨åˆ†éƒ½æ˜¯åŸåˆ›ï¼Œé™¤æ³•å‚è€ƒæ¸…åå¤§å­¦ï¼Œä½†æœ‰æ‰€ä¿®æ”¹
+**	×÷Õß£ºÕÅöÎ
+**	ĞŞ¸Ä£ºÂíÏè¡¢ÁÖÁ¦èº
+**	¹¦ÄÜ£ºËãÊõÂß¼­µ¥Ôª
+**	³ı·¨ÒÔÍâµÄ²¿·Ö¶¼ÊÇÔ­´´£¬³ı·¨²Î¿¼Çå»ª´óÑ§£¬µ«ÓĞËùĞŞ¸Ä
 */
 
-//è¿ç®—ç ï¼Œè¦ä¸æ§åˆ¶å™¨ç”Ÿæˆçš„ä¿æŒä¸€è‡´
+// this is a test string to see if the IP file is correctly repacked
+//ÔËËãÂë£¬ÒªÓë¿ØÖÆÆ÷Éú³ÉµÄ±£³ÖÒ»ÖÂ
 `define OP_SLL 		0
 `define OP_SRA 		1
 `define OP_SRL 		2
@@ -21,35 +22,43 @@
 `define OP_UCMP 	12
 `define OP_MULT 	13
 `define OP_DIV 		14
+`define OP_Ins		15
+`define OP_Ext 		16
 
 module ALU(
 	input 						clk,
     input 						rst,
 	
-	input 						flush,				//å¼‚å¸¸æ¸…é›¶ä¿¡å·
+	input 						flush,				//Òì³£ÇåÁãĞÅºÅ
 			
-	input 		[31:0] 			X,					//æ“ä½œæ•°1
-    input 		[31:0] 			Y,					//æ“ä½œæ•°2
-    input 		[3:0] 			S,					//æ“ä½œç 
-    input 		[1:0]			add_sub,			//æœ‰ç¬¦å·åŠ å‡æ³•éœ€è¦è¿›è¡Œæº¢å‡ºåˆ¤æ–­ï¼Œè¿™æ˜¯æ§åˆ¶å™¨ä¸ºaddã€subç”Ÿæˆçš„æ§åˆ¶ä¿¡å·
-													//é«˜ä½ä¸ºaddï¼Œä½ä½ä¸ºsub
+	input 		[31:0] 			X,					//²Ù×÷Êı1
+    input 		[31:0] 			Y,					//²Ù×÷Êı2
+    input 		[4:0] 			S,					//²Ù×÷Âë,µÍ4Î»ÎªÔ­ALU²Ù×÷Âë£¬¸ßÒ»Î»ÎªĞÂ¼Ó¹¦ÄÜÀ©Õ¹Âë
+    input 		[1:0]			add_sub,			//ÓĞ·ûºÅ¼Ó¼õ·¨ĞèÒª½øĞĞÒç³öÅĞ¶Ï£¬ÕâÊÇ¿ØÖÆÆ÷Îªadd¡¢subÉú³ÉµÄ¿ØÖÆĞÅºÅ
+													//¸ßÎ»Îªadd£¬µÍÎ»Îªsub
+	input		[4:0]			msb,				//for instruction ins and ext 
+	input		[4:0]			lsb,				//for instruction ins and ext
 			
-    output 		[31:0] 			Result1,			//è¿ç®—ç»“æœä½32ä½
-    output 		[31:0] 			Result2,			//è¿ç®—ç»“æœé«˜32ä½
-    output reg 	[31:0] 			Result1_no_mult,	//ä¸åŒ…å«ä¹˜æ³•çš„è¿ç®—ç»“æœä½ä½
-    output reg 	[31:0] 			Result2_no_mult,	//ä¸åŒ…å«ä¹˜æ³•çš„è¿ç®—ç»“æœé«˜ä½
-    output 						overflow,			//æº¢å‡ºä¿¡å·
-    output 						is_diving			//æ­£åœ¨åšé™¤æ³•çš„ä¿¡å·
+    output 		[31:0] 			Result1,			//ÔËËã½á¹ûµÍ32Î»
+    output 		[31:0] 			Result2,			//ÔËËã½á¹û¸ß32Î»
+    output reg 	[31:0] 			Result1_no_mult,	//²»°üº¬³Ë·¨µÄÔËËã½á¹ûµÍÎ»
+    output reg 	[31:0] 			Result2_no_mult,	//²»°üº¬³Ë·¨µÄÔËËã½á¹û¸ßÎ»
+    output 						overflow,			//Òç³öĞÅºÅ
+    output 						is_diving			//ÕıÔÚ×ö³ı·¨µÄĞÅºÅ
 );
 	
-	wire 		[63:0] 			X64;				//æ“ä½œæ•°Xçš„ç¬¦å·æ‰©å±•ï¼Œç”¨äºä¹˜æ³•
-    wire 		[63:0] 			Y64;				//æ“ä½œæ•°Yçš„ç¬¦å·æ‰©å±•
-    wire 		[63:0] 			R64_signed;			//æœ‰ç¬¦å·ä¹˜æ³•çš„64ä½ç»“æœ
-    wire 		[63:0] 			R64_unsigned;		//æ— ç¬¦å·ä¹˜æ³•çš„64ä½ç»“æœ
+	wire 		[63:0] 			X64;				//²Ù×÷ÊıXµÄ·ûºÅÀ©Õ¹£¬ÓÃÓÚ³Ë·¨
+    wire 		[63:0] 			Y64;				//²Ù×÷ÊıYµÄ·ûºÅÀ©Õ¹
+    wire 		[63:0] 			R64_signed;			//ÓĞ·ûºÅ³Ë·¨µÄ64Î»½á¹û
+    wire 		[63:0] 			R64_unsigned;		//ÎŞ·ûºÅ³Ë·¨µÄ64Î»½á¹û
     reg 		[31:0] 			Result1_mult;
     reg 		[31:0] 			Result2_mult;
+	reg			[31:0]			Logical_ruler;		//Âß¼­³ß
+	wire		[31:0]			sub_31_msb;			//Âß¼­³ß¸¨Öú¼ÆËã
 	
-    // åˆ¤æ–­æ˜¯ä¸æ˜¯ä¹˜æ³•ï¼Œåœ¨ä¹˜æ³•è¿ç®—ç»“æœå’Œéä¹˜æ³•è¿ç®—ç»“æœä¹‹é—´é€‰æ‹©ä¸€è·¯
+	assign sub_31_msb = 31 - msb;	//Âß¼­³ß¸¨ÖúÔËËã
+	
+    // ÅĞ¶ÏÊÇ²»ÊÇ³Ë·¨£¬ÔÚ³Ë·¨ÔËËã½á¹ûºÍ·Ç³Ë·¨ÔËËã½á¹ûÖ®¼äÑ¡ÔñÒ»Â·
     assign Result1 = (S==`OP_MULT||S==`OP_MULTU) ? Result1_mult : Result1_no_mult;
     assign Result2 = (S==`OP_MULT||S==`OP_MULTU) ? Result2_mult : Result2_no_mult;
 
@@ -58,7 +67,7 @@ module ALU(
 	assign R64_signed = X64 * Y64;
 	assign R64_unsigned = { 32'h00000000,X } * { 32'h00000000,Y };
 	
-	//æœ‰ç¬¦å·æº¢å‡ºåˆ¤æ–­
+	//ÓĞ·ûºÅÒç³öÅĞ¶Ï
 	assign overflow = add_sub[0] ? ( (X[31]^Result1[31])&(Y[31]^Result1[31]) )  : 
 					  add_sub[1] ? ( (X[31]^Result1[31])&(!Y[31]^Result1[31]) ) : 0;
     
@@ -136,6 +145,15 @@ module ALU(
 	        	Result1_no_mult <= dquotient;
 	        	Result2_no_mult <= dremain;
 	        end
+			`OP_Ins: begin	//ins
+				Logical_ruler = ((32'hffffffff>>lsb)<<(sub_31_msb + lsb))>>sub_31_msb;
+				Result1_no_mult = ((X<<lsb)&Logical_ruler) | (Y&~Logical_ruler);
+				Result2_no_mult = 0;
+			end
+			`OP_Ext: begin  //ext
+				Result1_no_mult <= (X>>lsb) & ~(32'hffffffff>>(msb+1)<<(msb+1));
+				Result2_no_mult = 0;
+			end
 	        default: begin
 	        	Result1_no_mult <= 0;
 	        	Result2_no_mult <= 0;
@@ -143,7 +161,7 @@ module ALU(
 	    endcase // S
     end // always@(*)
 
-    //è¿™éƒ¨åˆ†å…¨éƒ¨æ˜¯é™¤æ³•
+    //Õâ²¿·ÖÈ«²¿ÊÇ³ı·¨
 	localparam DIV_CYCLES = 32;
 	
 	wire 	[31:0] 			abs_x, abs_y;
@@ -207,9 +225,9 @@ endmodule // ALU
 
 
 /*
-**	ä½œè€…ï¼šå¼ é‘«
-**	åŠŸèƒ½ï¼šæ— ç¬¦å·é™¤æ³•
-**	ç…§æ¬æ¸…åå¤§å­¦çš„è®¾è®¡ï¼ŒåŸä½œè€…ç‰ˆæƒå£°æ˜å¦‚ä¸‹
+**	×÷Õß£ºÕÅöÎ
+**	¹¦ÄÜ£ºÎŞ·ûºÅ³ı·¨
+**	ÕÕ°áÇå»ª´óÑ§µÄÉè¼Æ£¬Ô­×÷Õß°æÈ¨ÉùÃ÷ÈçÏÂ
 */
 
 /////////////////////////////////////////////////////////////////////

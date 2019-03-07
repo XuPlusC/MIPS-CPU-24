@@ -1,10 +1,10 @@
 /*
-**	ä½œè€…ï¼šå¼ é‘«
-**	åŠŸèƒ½ï¼šæŒ‡ä»¤çš„è¯†åˆ«å’Œæ§åˆ¶ä¿¡å·çš„ç”Ÿæˆ
-**	åŸåˆ›
+**	×÷Õß£ºÕÅöÎ
+**	¹¦ÄÜ£ºÖ¸ÁîµÄÊ¶±ğºÍ¿ØÖÆĞÅºÅµÄÉú³É
+**	Ô­´´
 */
 
-`define CONTROL_BUS_WIDTH 33
+`define CONTROL_BUS_WIDTH 35
 
 module controller(
 	input  [5:0]					op,
@@ -14,31 +14,31 @@ module controller(
 	input  [4:0]					shamt,
 
 	output [`CONTROL_BUS_WIDTH:0]	control_bus,	
-	output [9:0]					branch_jump,	//æ‰€æœ‰è·³è½¬æŒ‡ä»¤ç¼–ç ï¼Œé€è·³è½¬é€»è¾‘
-	output 							in_delayslot	//å»¶è¿Ÿæ§½ï¼Œé€IF-IDæµæ°´æ®µï¼Œå»¶è¿Ÿä¸€ä¸ªå‘¨æœŸ
+	output [9:0]					branch_jump,	//ËùÓĞÌø×ªÖ¸Áî±àÂë£¬ËÍÌø×ªÂß¼­
+	output 							in_delayslot	//ÑÓ³Ù²Û£¬ËÍIF-IDÁ÷Ë®¶Î£¬ÑÓ³ÙÒ»¸öÖÜÆÚ
 );
 	
 	
-	wire [3:0]						aluop;			//ALUæ“ä½œç 
-	wire 							r1_sel;			//å¯„å­˜å™¨æ–‡ä»¶è¯»ç¼–å·é€‰æ‹©
-	wire 							r2_sel;			//å¯„å­˜å™¨æ–‡ä»¶è¯»ç¼–å·é€‰æ‹©
-	wire 							regs_we;		//å¯„å­˜å™¨å†™ä½¿èƒ½
-	wire [1:0]						rw_sel;			//å¯„å­˜å™¨å†™ç¼–å·é€‰æ‹©
-	wire [2:0]						din_sel;		//å¯„å­˜å™¨å†™æ•°æ®é€‰æ‹©
-	wire 							cp0_we;			//cp0å¯„å­˜å™¨å†™ä½¿èƒ½
-	wire [1:0]						ext_sel;		//ç«‹å³æ•°æ‰©å±•é€‰æ‹©
-	wire [1:0]						alua_sel;		//ALUæ“ä½œæ•°é€‰æ‹©
-	wire [1:0]						alub_sel;		//ALUæ“ä½œæ•°é€‰æ‹©
+	wire [4:0]						aluop;			//ALU²Ù×÷Âë
+	wire 							r1_sel;			//¼Ä´æÆ÷ÎÄ¼ş¶Á±àºÅÑ¡Ôñ
+	wire 							r2_sel;			//¼Ä´æÆ÷ÎÄ¼ş¶Á±àºÅÑ¡Ôñ
+	wire 							regs_we;		//¼Ä´æÆ÷Ğ´Ê¹ÄÜ
+	wire [1:0]						rw_sel;			//¼Ä´æÆ÷Ğ´±àºÅÑ¡Ôñ
+	wire [2:0]						din_sel;		//¼Ä´æÆ÷Ğ´Êı¾İÑ¡Ôñ
+	wire 							cp0_we;			//cp0¼Ä´æÆ÷Ğ´Ê¹ÄÜ
+	wire [1:0]						ext_sel;		//Á¢¼´ÊıÀ©Õ¹Ñ¡Ôñ
+	wire [1:0]						alua_sel;		//ALU²Ù×÷ÊıÑ¡Ôñ
+	wire [1:0]						alub_sel;		//ALU²Ù×÷ÊıÑ¡Ôñ
 	
-	wire 							r1_r;			//è¯»å¯„å­˜å™¨ç¬¬1è·¯ï¼Œç”¨äºé‡å®šå‘
-	wire 							r2_r;			//è¯»å¯„å­˜å™¨ç¬¬2è·¯ï¼Œç”¨äºé‡å®šå‘
-	wire 							load;			//lbã€lbuã€lhã€lhuã€lw
-	wire [1:0]						hilo_mode;		//hiloå¯„å­˜å™¨çš„å†™æ¨¡å¼ï¼Œé«˜ä½ä½åˆ†åˆ«å¯¹åº”hiå’Œlo
-	wire 							invalid_inst;	//éæ³•æŒ‡ä»¤
-	wire [1:0]						add_sub;		//æœ‰ç¬¦å·åŠ å‡æ³•ï¼Œç”¨äºaluçš„æº¢å‡ºåˆ¤æ–­
-	wire [2:0]						load_store;		//æ‰€æœ‰ä»¿å­˜æŒ‡ä»¤ç»Ÿä¸€ç¼–ç 
-													//000 lbã€001 lbuã€010 lhã€011 lhu
-													//100 lwã€101 sbã€ 110 shã€111 sw
+	wire 							r1_r;			//¶Á¼Ä´æÆ÷µÚ1Â·£¬ÓÃÓÚÖØ¶¨Ïò
+	wire 							r2_r;			//¶Á¼Ä´æÆ÷µÚ2Â·£¬ÓÃÓÚÖØ¶¨Ïò
+	wire 							load;			//lb¡¢lbu¡¢lh¡¢lhu¡¢lw
+	wire [1:0]						hilo_mode;		//hilo¼Ä´æÆ÷µÄĞ´Ä£Ê½£¬¸ßµÍÎ»·Ö±ğ¶ÔÓ¦hiºÍlo
+	wire 							invalid_inst;	//·Ç·¨Ö¸Áî
+	wire [1:0]						add_sub;		//ÓĞ·ûºÅ¼Ó¼õ·¨£¬ÓÃÓÚaluµÄÒç³öÅĞ¶Ï
+	wire [2:0]						load_store;		//ËùÓĞ·Â´æÖ¸ÁîÍ³Ò»±àÂë
+													//000 lb¡¢001 lbu¡¢010 lh¡¢011 lhu
+													//100 lw¡¢101 sb¡¢ 110 sh¡¢111 sw
 	wire 							op6,op5,op4,op3,op2,op1;
 	wire 							f6,f5,f4,f3,f2,f1;
 	wire 							rs5,rs4,rs3,rs2,rs1;
@@ -136,38 +136,43 @@ module controller(
 	wire 							ssnop;
 	wire 							sync;
 	wire 							pref;
+	wire							ins;
+	wire							ext;
+	wire 							jr_hb;
+	wire							sdbbp;
 
-	assign aluop[3] = or_ | ori | xor_ | xori | nor_ | slt | slti | sltu | sltiu | mult | div; 
+	assign aluop[4] = ext;
+	assign aluop[3] = or_ | ori | xor_ | xori | nor_ | slt | slti | sltu | sltiu | mult | div | ins; 
 	assign aluop[2] = add | addi | addu | addiu | lb | lbu | lh | lhu
 					      | lw | sb | sh | sw | sub | subu | and_ | andi | sltu | sltiu
-			              | divu | mult | div;
-	assign aluop[1] = srl | srlv | sub | subu | and_ | andi | nor_ | slt | slti | multu | div;
+			              | divu | mult | div | ins;
+	assign aluop[1] = srl | srlv | sub | subu | and_ | andi | nor_ | slt | slti | multu | div | ins;
 	assign aluop[0] = sra | srav | add | addi | addu | addiu | lb | lbu
 			              | lh | lhu | lw | sb | sh | sw | and_ | andi | xor_ | xori
-			              | slt | slti | multu | mult;
+			              | slt | slti | multu | mult | ins;
 
 	assign r1_sel = sllv | srav | srlv;
 	assign r2_sel = add | addu | sub | subu | slt | sltu | div | divu | mult
 			| multu | and_ | nor_ | or_ | xor_ | sll | sra | srl | beq | bne
-			| bgtz | blez | mtc0 | sb | sh | sw;
+			| bgtz | blez | mtc0 | sb | sh | sw | ins;
 
 	assign regs_we = add | addi | addu | addiu | sub | subu | slt | slti | sltu | sltiu
 			| and_ | andi | lui | nor_ | or_ | ori | xor_ | xori | sll | sllv | sra | srav
 			| srl | srlv | bltzal | bgezal | jal | jalr | mfhi | mflo | mfc0 |
-			lb | lbu | lh | lhu | lw ;
+			lb | lbu | lh | lhu | lw | ins | ext;
 
 	assign rw_sel[1] = add | addu | sub | subu | slt | sltu | and_ | nor_ | or_ | xor_
 			| sll | sllv | sra | srav | srl | srlv | jalr | mfhi | mflo;
 	assign rw_sel[0] = addi | addiu | slti | sltiu | andi | lui | ori | xori | mfc0 | lb
-			| lbu | lh | lhu | lw;
+			| lbu | lh | lhu | lw | ins | ext;
 
 	assign din_sel[2] = mfhi | mflo | add | addi | addu | addiu | sub 
 			| subu | slt | slti | sltu | sltiu | and_ | andi | lui | nor_ 
-			| or_ | ori | xor_ | xori | sll | sllv | sra | srav | srl | srlv; 
+			| or_ | ori | xor_ | xori | sll | sllv | sra | srav | srl | srlv | ins | ext; 
 	assign din_sel[1] = mfc0 | lb | lbu | lh | lhu | lw | add | addi | addu 
 			| addiu | sub | subu | slt | slti | sltu | sltiu | and_ | andi
 			| lui | nor_ | or_ | ori | xor_ | xori | sll | sllv | sra 
-			| srav | srl | srlv; 
+			| srav | srl | srlv | ins | ext; 
 	assign din_sel[0] = bltzal | bgezal | jal | jalr | mflo | mfc0;
 
 	assign cp0_we = mtc0;
@@ -186,14 +191,14 @@ module controller(
 	assign r1_r = add | addi | addu | addiu | sub | subu | slt | slti | sltu | sltiu
 			| div | divu | mult | multu | and_ | andi | nor_ | or_ | ori | xor_ | xori
 			| sllv | srav | srlv | beq | bne | bgez | bgtz | blez | bltz | bltzal
-			| bgezal | jr | jalr | lb | lbu | lh | lhu | lw | sb | sh | sw | mthi | mtlo;
+			| bgezal | jr | jr_hb | jalr | lb | lbu | lh | lhu | lw | sb | sh | sw | mthi | mtlo | ins | ext;
 	assign r2_r = add | addu | sub | subu | slt | sltu | div | divu | mult | multu
 			| and_ | nor_ | or_ | xor_ | sll | sllv | sra | srav | srl | srlv | beq
-			| bne | bgtz | blez | eret | mtc0 | sb | sh | sw;
+			| bne | bgtz | blez | eret | mtc0 | sb | sh | sw | ins;
 
 	assign load = lb | lbu | lh | lhu | lw;
 
-	assign branch_jump = { jalr|jr,jal|j,bgezal,bltzal,bltz,blez,bgtz,bgez,bne,beq };
+	assign branch_jump = { jalr|jr|jr_hb, jal|j, bgezal, bltzal, bltz, blez, bgtz, bgez, bne, beq};
 
 	assign load_store[0] = lbu | lhu | sb | sw;
 	assign load_store[1] = lh | lhu | sh | sw;
@@ -203,13 +208,13 @@ module controller(
 	assign add_sub[1] = sub;
 
 	assign in_delayslot = beq | bne | bgez | bgtz | blez | bltz | bltzal | bgezal 
-			| j | jal | jr | jalr;
+			| j | jal | jr | jr_hb | jalr;
 
 	assign hilo_mode[1] = div | divu | mult | multu | mthi;
 	assign hilo_mode[0] = div | divu | mult | multu | mtlo;
 	
 	assign control_bus = { 
-			add_sub[1:0],load_store[2:0], invalid_inst,
+			sdbbp, aluop[4], add_sub[1:0],load_store[2:0], invalid_inst,		//sdbbpºÍaluop[4]ÎªÀ©³äĞÅºÅ£¬ÎªÁË²»´òÂÒ¶¥²ãÄ£¿éµÄĞÅºÅ´«µİ£¬Òò´Ë·ÅÔÚ¿ØÖÆĞÅºÅ×îÇ°Ãæ
 			eret, break_, syscall, hilo_mode[1:0], ~nop, load, r2_r, r1_r,
 			alub_sel[1:0], alua_sel[1:0], ext_sel[1:0], cp0_we,
 			din_sel[2:0], rw_sel[1:0], regs_we, r2_sel, r1_sel, aluop[3:0] };
@@ -217,8 +222,8 @@ module controller(
 	assign invalid_inst = ~(add | addi | addu | addiu | sub | subu | slt | slti | sltu | sltiu
 		| div | divu | mult | multu	| and_ | andi | lui | nor_ | or_ | ori | xor_ | xori | sll
 		| sllv | sra | srav | srl | srlv | beq | bne | bgez | bgtz | blez | bltz | bltzal | bgezal
-		| j | jal | jr | jalr | mfhi | mflo | mthi | mtlo | break_ | syscall | eret | mfc0
-		| mtc0 | lb | lbu | lh | lhu | lw | sb | sh | sw);
+		| j | jal | jr | jr_hb | jalr | mfhi | mflo | mthi | mtlo | break_ | syscall | eret | mfc0
+		| mtc0 | lb | lbu | lh | lhu | lw | sb | sh | sw | ins | ext | sdbbp | jr_hb);
 
 	assign {op6,op5,op4,op3,op2,op1} = op;
 	assign {f6,f5,f4,f3,f2,f1} = func;
@@ -279,7 +284,8 @@ module controller(
 	assign srav = r & ~f6 & ~f5 & ~f4 & f3 & f2 & f1;		//srav func = 000111
 	assign srl = r & ~f6 & ~f5 & ~f4 & ~f3 & f2 & ~f1;		//srl func = 000010
 	assign srlv = r & ~f6 & ~f5 & ~f4 & f3 & f2 & ~f1;		//srlv func = 000110
-	assign jr = r & ~f6 & ~f5 & f4 & ~f3 & ~f2 & ~f1;		//jr func = 001000
+	assign jr = r & ~f6 & ~f5 & f4 & ~f3 & ~f2 & ~f1 & ~shamt[4];		//jr func = 001000, instruction[10] = 0
+	assign jr_hb = r & ~f6 & ~f5 & f4 & ~f3 & ~f2 & ~f1 & shamt[4];		//jr_hb func = 001000, instruction[10] = 1 
 	assign jalr = r & ~f6 & ~f5 & f4 & ~f3 & ~f2 & f1;		//jalr func = 001001
 	assign mfhi = r & ~f6 & f5 & ~f4 & ~f3 & ~f2 & ~f1;		//mfhi func = 010000
 	assign mflo = r & ~f6 & f5 & ~f4 & ~f3 & f2 & ~f1;		//mflo func = 010010
@@ -312,6 +318,12 @@ module controller(
 			& ~f6 & ~f5 & ~f4 & ~f3 & ~f2 & f1;		//maddu op = 011100,func = 000001
 	assign msub = ~op6 & op5 & op4 & op3 & ~op2 & ~op1
 			& ~f6 & ~f5 & ~f4 & f3 & ~f2 & ~f1;		//msub op = 011100,func = 000100
+	assign ins = ~op6 & op5 & op4 & op3 & op2 & op1
+			& ~f6 & ~f5 & ~f4 & f3 & ~f2 & ~f1;		//ins op = 011111,func = 000100
+	assign ext = ~op6 & op5 & op4 & op3 & op2 & op1
+			& ~f6 & ~f5 & ~f4 & ~f3 & ~f2 & ~f1;	//ext op = 011111,func = 000000	
+	assign sdbbp = ~op6 & op5 & op4 & op3 & ~op2 & ~op1
+			& f6 & f5 & f4 & f3 & f2 & f1;			//sdbbp op = 011100,func = 111111
 
 	assign bgez = ~op6 & ~op5 & ~op4 & ~op3 & ~op2 & op1 
 			& ~rt5 & ~rt4 & ~rt3 & ~rt2 & rt1;		//bgez op = 000001,rt = 00001

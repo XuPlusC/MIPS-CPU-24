@@ -1,35 +1,35 @@
 /*
-**  ä½œè€…ï¼šæ—åŠ›éŸ¬
-**  ä¿®æ”¹ï¼šå¼ é‘«
-**  åŠŸèƒ½ï¼šç¨‹åºè®¡æ•°å™¨
-**  åœ°å€è½¬ç§»é€»è¾‘ç…§æ¬æ¸…åå¤§å­¦ï¼Œä½†å¢åŠ äº†pcåœ°å€å¼‚å¸¸æ£€æµ‹
+**  ×÷Õß£ºÁÖÁ¦èº
+**  ĞŞ¸Ä£ºÕÅöÎ
+**  ¹¦ÄÜ£º³ÌĞò¼ÆÊıÆ÷
+**  µØÖ·×ªÒÆÂß¼­ÕÕ°áÇå»ª´óÑ§£¬µ«Ôö¼ÓÁËpcµØÖ·Òì³£¼ì²â
 */
 module pc(
 	input wire 			clk,
 	input wire 			resetn,
     
     input wire 			pc_en,
-    input wire[31:0] 	branch_address, 	//æ¥è‡ªåˆ†æ”¯æ¨¡å—çš„è·³è½¬åœ°å€
-    input wire 			is_branch, 			//åˆ†æ”¯æ¨¡å—è·³è½¬ä¿¡å·
-    input wire 			is_exception, 		//å¼‚å¸¸æ¨¡å—è·³è½¬ä¿¡å·
-    input wire[31:0] 	exception_new_pc, 	//æ¥è‡ªå¼‚å¸¸æ¨¡å—çš„è·³è½¬åœ°å€
+    input wire[31:0] 	branch_address, 	//À´×Ô·ÖÖ§Ä£¿éµÄÌø×ªµØÖ·
+    input wire 			is_branch, 			//·ÖÖ§Ä£¿éÌø×ªĞÅºÅ
+    input wire 			is_exception, 		//Òì³£Ä£¿éÌø×ªĞÅºÅ
+    input wire[31:0] 	exception_new_pc, 	//À´×ÔÒì³£Ä£¿éµÄÌø×ªµØÖ·
 	
 	output reg[31:0] 	pc_reg,
     output 				illegal_pc_if
 );
     
-	parameter PC_INITIAL = 32'hbfc00000; //ç¬¬ä¸€æ¡æŒ‡ä»¤å¼€å§‹æ‰§è¡Œçš„ä½ç½®
+	parameter PC_INITIAL = 32'hbfc00000; //µÚÒ»ÌõÖ¸Áî¿ªÊ¼Ö´ĞĞµÄÎ»ÖÃ
 
     reg[31:0] pc_next;
     
-    //éå¯¹é½æŒ‡ä»¤åœ°å€ï¼Œå³ä½2ä½ä¸ä¸º0è§†ä½œå¼‚å¸¸ï¼Œä¿¡å·éšæµæ°´æ®µä¼ è‡³MEMæ®µå¼‚å¸¸å¤„ç†æ¨¡å—
+    //·Ç¶ÔÆëÖ¸ÁîµØÖ·£¬¼´µÍ2Î»²»Îª0ÊÓ×÷Òì³££¬ĞÅºÅËæÁ÷Ë®¶Î´«ÖÁMEM¶ÎÒì³£´¦ÀíÄ£¿é
 	assign illegal_pc_if = pc_reg[1] | pc_reg[0]; 
 
     always @(*) begin
         if (!resetn) begin
           pc_next <= PC_INITIAL;
         end
-        else if(pc_en) begin //æ ¹æ®ä¿¡å·å†³å®šPCçš„ä¸‹ä¸€ä¸ªå€¼ï¼Œå¼‚å¸¸ä¼˜å…ˆäºè·³è½¬ï¼Œä¼˜å…ˆäºæ™®é€šè‡ªå¢
+        else if(pc_en) begin //¸ù¾İĞÅºÅ¾ö¶¨PCµÄÏÂÒ»¸öÖµ£¬Òì³£ÓÅÏÈÓÚÌø×ª£¬ÓÅÏÈÓÚÆÕÍ¨×ÔÔö
             if(is_exception) begin
                 pc_next <= exception_new_pc;
             end

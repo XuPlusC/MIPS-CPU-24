@@ -1,12 +1,12 @@
 /*
-**  作者：马翔
-**  功能：EX-MEM流水接口
-**  原创
+**  ���ߣ�����
+**  ���ܣ�EX-MEM��ˮ�ӿ�
+**  ԭ��
 */
 
-//选择模块尽可能早选择，少往后传数据和信号，需要优化
+//ѡ��ģ�龡������ѡ�����������ݺ��źţ���Ҫ�Ż�
 
-`define CONTROL_BUS_WIDTH 33
+`define CONTROL_BUS_WIDTH 35
 
 module EX_MEM(
 	input 								clk,
